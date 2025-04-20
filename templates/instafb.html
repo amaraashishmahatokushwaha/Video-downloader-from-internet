@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Instagram & Facebook Downloader</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <style>
+    :root {
+      --instagram: #E1306C;
+      --instagram-gradient: linear-gradient(45deg, #405DE6, #5851DB, #833AB4, #C13584, #E1306C, #FD1D1D);
+      --facebook: #1877F2;
+      --light: #f8f9fa;
+      --dark: #343a40;
+      --success: #28a745;
+      --danger: #dc3545;
+      --warning: #ffc107;
+      --info: #17a2b8;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', 'Roboto', sans-serif;
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      min-height: 100vh;
+      color: var(--dark);
+      padding: 40px 20px;
+    }
+
+    .container {
+      width: 90%;
+      max-width: 800px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      padding: 30px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .header h1 {
+      font-size: 2.2rem;
+      color: var(--instagram);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .header p {
+      color: var(--dark);
+      font-size: 1rem;
+      opacity: 0.8;
+    }
+
+    .platform-selector {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 30px;
+    }
+
+    .platform-btn {
+      padding: 12px 25px;
+      border: none;
+      border-radius: 30px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0 10px;
+      color: white;
+    }
+
+    .platform-btn.instagram {
+      background: var(--instagram-gradient);
+      box-shadow: 0 4px 15px rgba(225, 48, 108, 0.3);
+    }
+
+    .platform-btn.facebook {
+      background-color: var(--facebook);
+      box-shadow: 0 4px 15px rgba(24, 119, 242, 0.3);
+    }
+
+    .platform-btn:hover {
+      transform: translateY(-2px);
+    }
+
+    .platform-btn.active {
+      position: relative;
+    }
+
+    .platform-btn.active::after {
+      content: '';
+      position: absolute;
+      bottom: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: white;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 15px;
+      border: 2px solid #ddd;
+      border-radius: 10px;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+      outline: none;
+    }
+
+    .form-control:focus {
+      border-color: var(--instagram);
+      box-shadow: 0 0 0 3px rgba(225, 48, 108, 0.2);
+    }
+
+    .form-control:focus.facebook-active {
+      border-color: var(--facebook);
+      box-shadow: 0 0 0 3px rgba(24, 119, 242, 0.2);
+    }
+
+    .btn {
+      width: 100%;
+      padding: 15px;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn-primary {
+      color: white;
+    }
+
+    .btn-instagram {
+      background: var(--instagram-gradient);
+    }
+
+    .btn-facebook {
+      background-color: var(--facebook);
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      transform: translateY(-2px);
+    }
+
+    .btn-danger {
+      background-color: var(--danger);
+      color: white;
+    }
+
+    .btn-danger:hover:not(:disabled) {
+      background-color: #bd2130;
+      transform: translateY(-2px);
+    }
+
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .controls {
+      display: flex;
+      gap: 15px;
+      margin-top: 20px;
+    }
+
+    .controls .btn {
+      flex: 1;
+    }
+
+    .output-container {
+      margin-top: 25px;
+      position: relative;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .output-header {
+      background-color: var(--dark);
+      color: white;
+      padding: 10px 15px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .output-body {
+      height: 200px;
+      overflow-y: auto;
+      background-color: #2d3748;
+      color: #e2e8f0;
+      padding: 15px;
+      font-family: 'Consolas', 'Monaco', monospace;
+      font-size: 0.9rem;
+      white-space: pre-wrap;
+      line-height: 1.5;
+    }
+
+    .progress-container {
+      position: relative;
+      width: 120px;
+      height: 120px;
+      margin: 20px auto;
+      transition: all 0.3s ease;
+      display: none;
+    }
+
+    .progress-container.active {
+      display: block;
+    }
+
+    .progress-ring {
+      width: 100%;
+      height: 100%;
+      transform: rotate(-90deg);
+    }
+
+    .progress-circle {
+      fill: transparent;
+      stroke: #e0e0e0;
+      stroke-width: 8;
+    }
+
+    .progress-value {
+      fill: transparent;
+      stroke-width: 8;
+      stroke-linecap: round;
+      transition: stroke-dashoffset 0.3s ease;
+    }
+
+    .instagram-active .progress-value {
+      stroke: var(--instagram);
+    }
+
+    .facebook-active .progress-value {
+      stroke: var(--facebook);
+    }
+
+    .progress-text {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 1.5rem;
+      font-weight: bold;
+    }
+
+    .instagram-active .progress-text {
+      color: var(--instagram);
+    }
+
+    .facebook-active .progress-text {
+      color: var(--facebook);
+    }
+
+    .format-options {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .format-option {
+      position: relative;
+    }
+
+    .format-option input {
+      position: absolute;
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .format-option label {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 15px;
+      border: 2px solid #ddd;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      height: 100%;
+    }
+
+    .instagram-active .format-option input:checked + label {
+      border-color: var(--instagram);
+      background-color: rgba(225, 48, 108, 0.05);
+    }
+
+    .facebook-active .format-option input:checked + label {
+      border-color: var(--facebook);
+      background-color: rgba(24, 119, 242, 0.05);
+    }
+
+    .format-option i {
+      font-size: 1.5rem;
+      margin-bottom: 8px;
+      color: var(--dark);
+    }
+
+    .instagram-active .format-option input:checked + label i {
+      color: var(--instagram);
+    }
+
+    .facebook-active .format-option input:checked + label i {
+      color: var(--facebook);
+    }
+
+    .format-name {
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+
+    .format-desc {
+      font-size: 0.75rem;
+      opacity: 0.8;
+      margin-top: 5px;
+    }
+
+    .checkbox-group {
+      display: flex;
+      gap: 5px;
+      align-items: center;
+      margin-top: 10px;
+    }
+
+    .checkbox-group input {
+      width: 18px;
+      height: 18px;
+    }
+
+    .shake {
+      animation: shake 0.5s;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+      20%, 40%, 60%, 80% { transform: translateX(5px); }
+    }
+
+    .fade-in {
+      animation: fadeIn 0.5s;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @media (max-width: 768px) {
+      .format-options {
+        grid-template-columns: 1fr;
+      }
+
+      .controls {
+        flex-direction: column;
+      }
+
+      .platform-selector {
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .platform-btn {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container fade-in">
+    <div class="header">
+      <h1>
+        <i class="fab fa-instagram"></i>
+        <i class="fab fa-facebook-f"></i>
+        Social Media Downloader
+      </h1>
+      <p>Download videos, reels, stories, and photos from Instagram and Facebook</p>
+    </div>
+
+    <div class="platform-selector">
+      <button class="platform-btn instagram active" data-platform="instagram">
+        <i class="fab fa-instagram"></i> Instagram
+      </button>
+      <button class="platform-btn facebook" data-platform="facebook">
+        <i class="fab fa-facebook-f"></i> Facebook
+      </button>
+    </div>
+
+    <form id="downloadForm">
+      <input type="hidden" id="platformInput" name="platform" value="instagram">
+
+      <div class="form-group">
+        <input type="text" id="url" class="form-control" placeholder="Enter Instagram URL or @username" required />
+      </div>
+
+      <div id="instagramOptions">
+        <div class="format-options">
+          <div class="format-option">
+            <input type="radio" id="singlePost" name="format" value="post" checked />
+            <label for="singlePost">
+              <i class="fas fa-image"></i>
+              <div class="format-name">Single Post</div>
+              <div class="format-desc">Download a specific post</div>
+            </label>
+          </div>
+          <div class="format-option">
+            <input type="radio" id="profileContent" name="format" value="profile" />
+            <label for="profileContent">
+              <i class="fas fa-user"></i>
+              <div class="format-name">Profile Content</div>
+              <div class="format-desc">Download from a user</div>
+            </label>
+          </div>
+          <div class="format-option">
+            <input type="radio" id="story" name="format" value="story" />
+            <label for="story">
+              <i class="fas fa-circle"></i>
+              <div class="format-name">Stories</div>
+              <div class="format-desc">Download active stories</div>
+            </label>
+          </div>
+          <div class="format-option">
+            <input type="radio" id="reel" name="format" value="reel" />
+            <label for="reel">
+              <i class="fas fa-video"></i>
+              <div class="format-name">Reels</div>
+              <div class="format-desc">Download reels</div>
+            </label>
+          </div>
+        </div>
+        <div class="checkbox-group">
+          <input type="checkbox" id="includeCaption" checked />
+          <label for="includeCaption">Include captions and metadata</label>
+        </div>
+        <div class="checkbox-group">
+          <input type="checkbox" id="highestQuality" checked />
+          <label for="highestQuality">Download highest quality available</label>
+        </div>
+        <div class="checkbox-group">
+          <input type="checkbox" id="skipJsonFiles" checked />
+          <label for="skipJsonFiles">Skip JSON metadata files</label>
+        </div>
+        <div class="checkbox-group">
+          <input type="checkbox" id="flattenFolders" checked />
+          <label for="flattenFolders">Save directly to downloads (no subfolders)</label>
+        </div>
+      </div>
+
+      <div id="facebookOptions" class="hidden">
+        <div class="format-options">
+          <div class="format-option">
+            <input type="radio" id="fbVideo" name="fb-format" value="video" checked />
+            <label for="fbVideo">
+              <i class="fas fa-video"></i>
+              <div class="format-name">Video</div>
+              <div class="format-desc">Download Facebook videos</div>
+            </label>
+          </div>
+          <div class="format-option">
+            <input type="radio" id="fbPhoto" name="fb-format" value="photo" />
+            <label for="fbPhoto">
+              <i class="fas fa-image"></i>
+              <div class="format-name">Photos</div>
+              <div class="format-desc">Download photos & albums</div>
+            </label>
+          </div>
+          <div class="format-option">
+            <input type="radio" id="fbPage" name="fb-format" value="page" />
+            <label for="fbPage">
+              <i class="fas fa-flag"></i>
+              <div class="format-name">Page Content</div>
+              <div class="format-desc">Download from a page</div>
+            </label>
+          </div>
+          <div class="format-option">
+            <input type="radio" id="fbProfile" name="fb-format" value="profile" />
+            <label for="fbProfile">
+              <i class="fas fa-user"></i>
+              <div class="format-name">Profile</div>
+              <div class="format-desc">Download public content</div>
+            </label>
+          </div>
+        </div>
+        <div class="checkbox-group">
+          <input type="checkbox" id="fbIncludeText" checked />
+          <label for="fbIncludeText">Include post text and metadata</label>
+        </div>
+        <div class="checkbox-group">
+          <input type="checkbox" id="fbHighQuality" checked />
+          <label for="fbHighQuality">Download highest quality available</label>
+        </div>
+        <div class="checkbox-group">
+          <input type="checkbox" id="fbSkipJsonFiles" checked />
+          <label for="fbSkipJsonFiles">Skip JSON metadata files</label>
+        </div>
+        <div class="checkbox-group">
+          <input type="checkbox" id="fbFlattenFolders" checked />
+          <label for="fbFlattenFolders">Save directly to downloads (no subfolders)</label>
+        </div>
+        <div class="form-group">
+          <h3>Number of posts to download (most recent)</h3>
+          <input type="range" min="1" max="50" value="10" class="form-control" id="postCount">
+          <div style="display: flex; justify-content: space-between; margin-top: 5px;">
+            <span>1</span>
+            <span id="postCountValue">10</span>
+            <span>50</span>
+          </div>
+        </div>
+      </div>
+
+      <button type="submit" id="startBtn" class="btn btn-primary btn-instagram">
+        <i class="fas fa-download"></i> Start Download
+      </button>
+    </form>
+
+    <div class="progress-container instagram-active" id="progressContainer">
+      <svg class="progress-ring" width="120" height="120">
+        <circle class="progress-circle" cx="60" cy="60" r="54"></circle>
+        <circle class="progress-value" cx="60" cy="60" r="54" id="progressValue"></circle>
+      </svg>
+      <div class="progress-text" id="progressText">0%</div>
+    </div>
+
+    <div class="output-container">
+      <div class="output-header">
+        <span>Download Status</span>
+        <span id="statusIndicator">Ready</span>
+      </div>
+      <div class="output-body" id="output">⏳ Awaiting download...</div>
+    </div>
+
+    <div class="controls">
+      <button id="stopBtn" class="btn btn-danger" disabled>
+        <i class="fas fa-stop"></i> Stop Download
+      </button>
+    </div>
+  </div>
+
+  <script>
+    // Initialize platform switching
+    const platformBtns = document.querySelectorAll('.platform-btn');
+    const instagramOptions = document.getElementById('instagramOptions');
+    const facebookOptions = document.getElementById('facebookOptions');
+    const platformInput = document.getElementById('platformInput');
+    const urlInput = document.getElementById('url');
+    const container = document.querySelector('.container');
+    const progressContainer = document.getElementById('progressContainer');
+    const startBtn = document.getElementById('startBtn');
+
+    platformBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        platformBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        const platform = btn.getAttribute('data-platform');
+        platformInput.value = platform;
+
+        if (platform === 'instagram') {
+          instagramOptions.classList.remove('hidden');
+          facebookOptions.classList.add('hidden');
+          urlInput.placeholder = 'Enter Instagram URL or @username';
+          container.classList.remove('facebook-active');
+          container.classList.add('instagram-active');
+          progressContainer.classList.remove('facebook-active');
+          progressContainer.classList.add('instagram-active');
+          startBtn.classList.remove('btn-facebook');
+          startBtn.classList.add('btn-instagram');
+        } else {
+          instagramOptions.classList.add('hidden');
+          facebookOptions.classList.remove('hidden');
+          urlInput.placeholder = 'Enter Facebook URL or page name';
+          container.classList.remove('instagram-active');
+          container.classList.add('facebook-active');
+          progressContainer.classList.remove('instagram-active');
+          progressContainer.classList.add('facebook-active');
+          startBtn.classList.remove('btn-instagram');
+          startBtn.classList.add('btn-facebook');
+        }
+      });
+    });
+
+    // Post count slider
+    const postCountSlider = document.getElementById('postCount');
+    const postCountValue = document.getElementById('postCountValue');
+    if (postCountSlider && postCountValue) {
+      postCountSlider.addEventListener('input', () => {
+        postCountValue.textContent = postCountSlider.value;
+      });
+    }
+
+    // Form elements
+    const form = document.getElementById('downloadForm');
+    const output = document.getElementById('output');
+    const stopBtn = document.getElementById('stopBtn');
+    const progressValue = document.getElementById('progressValue');
+    const progressText = document.getElementById('progressText');
+    const statusIndicator = document.getElementById('statusIndicator');
+
+    let abortController = null;
+
+    // Progress circle setup
+    const radius = 54;
+    const circumference = 2 * Math.PI * radius;
+    progressValue.style.strokeDasharray = `${circumference} ${circumference}`;
+    progressValue.style.strokeDashoffset = circumference;
+
+    // Update progress UI
+    function updateProgress(percent) {
+      const offset = circumference - (percent / 100 * circumference);
+      progressValue.style.strokeDashoffset = offset;
+      progressText.textContent = `${Math.round(percent)}%`;
+    }
+
+    // Update status indicator
+    function updateStatus(status, isError = false) {
+      statusIndicator.textContent = status;
+      statusIndicator.style.color = isError ? 'var(--danger)' : 'var(--success)';
+    }
+
+    // Build download options
+    function buildDownloadOptions() {
+      const url = urlInput.value.trim();
+      const platform = platformInput.value;
+      const options = { url, platform };
+
+      if (platform === 'instagram') {
+        options.format = document.querySelector('input[name="format"]:checked').value;
+        options.includeCaption = document.getElementById('includeCaption').checked;
+        options.highestQuality = document.getElementById('highestQuality').checked;
+        options.skipJsonFiles = document.getElementById('skipJsonFiles').checked;
+        options.flattenFolders = document.getElementById('flattenFolders').checked;
+        options.isProfile = options.format === 'profile';
+        options.contentType = options.format;
+        options.contentCount = 12; // Default for Instagram profiles
+      } else {
+        options.format = document.querySelector('input[name="fb-format"]:checked').value;
+        options.includeText = document.getElementById('fbIncludeText').checked;
+        options.highQuality = document.getElementById('fbHighQuality').checked;
+        options.skipJsonFiles = document.getElementById('fbSkipJsonFiles').checked;
+        options.flattenFolders = document.getElementById('fbFlattenFolders').checked;
+        options.videoCount = document.getElementById('postCount').value;
+        options.isPage = options.format === 'page';
+      }
+
+      return options;
+    }
+
+    // Handle form submission
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+
+      if (abortController) {
+        alert('A download is already in progress. Please stop it before starting a new one.');
+        return;
+      }
+
+      const options = buildDownloadOptions();
+      abortController = new AbortController();
+      progressContainer.classList.add('active');
+      stopBtn.disabled = false;
+      startBtn.disabled = true;
+      updateStatus('Downloading', false);
+      output.innerHTML = '⏳ Starting download process...\n';
+
+      try {
+        const response = await fetch('/download/instafacebook', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(options),
+          signal: abortController.signal
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let progress = 0;
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const text = decoder.decode(value);
+          output.innerHTML += text;
+          output.scrollTop = output.scrollHeight;
+
+          const progressMatch = text.match(/Progress: (\d+)%/);
+          if (progressMatch) {
+            progress = parseInt(progressMatch[1]);
+            updateProgress(progress);
+          }
+
+          if (text.includes('Download completed successfully')) {
+            updateStatus('Completed', false);
+            // Fetch the file list and trigger downloads
+            await fetchDownloadedFiles(options.platform, options.skipJsonFiles || options.fbSkipJsonFiles);
+          } else if (text.includes('Download failed')) {
+            updateStatus('Failed', true);
+          }
+        }
+      } catch (error) {
+        if (error.name === 'AbortError') {
+          output.innerHTML += '🛑 Download stopped by user.\n';
+          updateStatus('Stopped', true);
+        } else {
+          output.innerHTML += `❌ Error: ${error.message}\n`;
+          updateStatus('Error', true);
+        }
+      } finally {
+        abortController = null;
+        progressContainer.classList.remove('active');
+        stopBtn.disabled = true;
+        startBtn.disabled = false;
+      }
+    });
+
+    // Fetch and download files
+    async function fetchDownloadedFiles(platform, skipJsonFiles) {
+      try {
+        const response = await fetch(`/files/${platform}`);
+        const files = await response.json();
+        
+        for (const file of files) {
+          // Skip JSON files if the option is checked
+          if (skipJsonFiles && file.toLowerCase().endsWith('.json')) {
+            output.innerHTML += `⏭️ Skipped JSON file: ${file}\n`;
+            continue;
+          }
+
+          const fileResponse = await fetch(`/file/${platform}/${encodeURIComponent(file)}`, {
+            headers: {
+              'X-Flatten-Folders': (
+                platform === 'instagram' ? 
+                document.getElementById('flattenFolders').checked : 
+                document.getElementById('fbFlattenFolders').checked
+              ).toString()
+            }
+          });
+          
+          const blob = await fileResponse.blob();
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = file;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+          output.innerHTML += `📄 Downloaded: ${file}\n`;
+        }
+      } catch (error) {
+        output.innerHTML += `❌ Error fetching files: ${error.message}\n`;
+      }
+    }
+
+    // Handle stop button
+    stopBtn.addEventListener('click', async () => {
+      if (abortController) {
+        abortController.abort();
+        try {
+          await fetch('/stop', { method: 'POST' });
+        } catch (error) {
+          output.innerHTML += `❌ Error stopping download: ${error.message}\n`;
+        }
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,1137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Twitter Downloader Pro</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #1da1f2;
+      --primary-dark: #0d8bd9;
+      --secondary: #2c3e50;
+      --light: #f8f9fa;
+      --dark: #343a40;
+      --success: #28a745;
+      --danger: #dc3545;
+      --warning: #ffc107;
+      --info: #17a2b8;
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Segoe UI', 'Roboto', sans-serif;
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      min-height: 100vh;
+      color: var(--dark);
+      padding: 40px 20px;
+    }
+    
+    .container {
+      width: 90%;
+      max-width: 800px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      padding: 30px;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    
+    .header h1 {
+      font-size: 2.2rem;
+      color: var(--primary);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+    
+    .header p {
+      color: var(--secondary);
+      font-size: 1rem;
+      opacity: 0.8;
+    }
+    
+    .form-group {
+      margin-bottom: 20px;
+    }
+    
+    .form-control {
+      width: 100%;
+      padding: 15px;
+      border: 2px solid #ddd;
+      border-radius: 10px;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+      outline: none;
+    }
+    
+    .form-control:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(29, 161, 242, 0.2);
+    }
+    
+    .btn {
+      width: 100%;
+      padding: 15px;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .btn-primary {
+      background-color: var(--primary);
+      color: white;
+    }
+    
+    .btn-primary:hover:not(:disabled) {
+      background-color: var(--primary-dark);
+      transform: translateY(-2px);
+    }
+    
+    .btn-danger {
+      background-color: var(--danger);
+      color: white;
+    }
+    
+    .btn-danger:hover:not(:disabled) {
+      background-color: #bd2130;
+      transform: translateY(-2px);
+    }
+    
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    
+    .controls {
+      display: flex;
+      gap: 15px;
+      margin-top: 20px;
+    }
+    
+    .controls .btn {
+      flex: 1;
+    }
+    
+    .output-container {
+      margin-top: 25px;
+      position: relative;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    
+    .output-header {
+      background-color: var(--secondary);
+      color: white;
+      padding: 10px 15px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .output-body {
+      height: 200px;
+      overflow-y: auto;
+      background-color: #2d3748;
+      color: #e2e8f0;
+      padding: 15px;
+      font-family: 'Consolas', 'Monaco', monospace;
+      font-size: 0.9rem;
+      white-space: pre-wrap;
+      line-height: 1.5;
+    }
+    
+    .progress-container {
+      position: relative;
+      width: 120px;
+      height: 120px;
+      margin: 20px auto;
+      transition: all 0.3s ease;
+      display: none;
+    }
+    
+    .progress-container.active {
+      display: block;
+    }
+    
+    .progress-ring {
+      width: 100%;
+      height: 100%;
+      transform: rotate(-90deg);
+    }
+    
+    .progress-circle {
+      fill: transparent;
+      stroke: #e0e0e0;
+      stroke-width: 8;
+    }
+    
+    .progress-value {
+      fill: transparent;
+      stroke: var(--primary);
+      stroke-width: 8;
+      stroke-linecap: round;
+      transition: stroke-dashoffset 0.3s ease;
+    }
+    
+    .progress-text {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: var(--primary);
+    }
+    
+    .tabs {
+      display: flex;
+      border-bottom: 2px solid #eee;
+      margin-bottom: 20px;
+    }
+    
+    .tab {
+      padding: 10px 20px;
+      font-weight: 600;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.3s ease;
+      color: var(--secondary);
+    }
+    
+    .tab.active {
+      color: var(--primary);
+    }
+    
+    .tab.active::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background-color: var(--primary);
+    }
+    
+    .tab-content {
+      display: none;
+    }
+    
+    .tab-content.active {
+      display: block;
+      animation: fadeIn 0.3s ease;
+    }
+    
+    .format-options {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    
+    .format-option {
+      position: relative;
+    }
+    
+    .format-option input {
+      position: absolute;
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    
+    .format-option label {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 15px;
+      border: 2px solid #ddd;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      height: 100%;
+    }
+    
+    .format-option input:checked + label {
+      border-color: var(--primary);
+      background-color: rgba(29, 161, 242, 0.05);
+    }
+    
+    .format-option i {
+      font-size: 1.5rem;
+      margin-bottom: 8px;
+      color: var(--secondary);
+    }
+    
+    .format-option input:checked + label i {
+      color: var(--primary);
+    }
+    
+    .format-name {
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+    
+    .format-desc {
+      font-size: 0.75rem;
+      opacity: 0.8;
+      margin-top: 5px;
+    }
+    
+    .quality-selector {
+      margin-top: 20px;
+    }
+    
+    .quality-selector h3 {
+      font-size: 1rem;
+      margin-bottom: 10px;
+      color: var(--secondary);
+    }
+    
+    .quality-options {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+    
+    .quality-options .format-option label {
+      padding: 10px;
+    }
+
+    .checkbox-group {
+      display: flex;
+      gap: 5px;
+      align-items: center;
+      margin-top: 10px;
+    }
+    
+    .checkbox-group input {
+      width: 18px;
+      height: 18px;
+    }
+    
+    .help-container {
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 1px solid #eee;
+    }
+    
+    .help-container h2 {
+      color: var(--secondary);
+      font-size: 1.5rem;
+      margin-bottom: 15px;
+      text-align: center;
+    }
+    
+    .faq-item {
+      margin-bottom: 15px;
+      border: 1px solid #eee;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    
+    .faq-question {
+      padding: 15px;
+      font-weight: 600;
+      background-color: #f8f9fa;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .faq-answer {
+      padding: 0 15px;
+      max-height: 0;
+      overflow: hidden;
+      transition: all 0.3s ease;
+      line-height: 1.6;
+    }
+    
+    .faq-item.active .faq-answer {
+      padding: 15px;
+      max-height: 500px;
+    }
+    
+    .faq-item.active .faq-toggle i {
+      transform: rotate(180deg);
+    }
+    
+    .success-icon {
+      color: var(--success);
+      animation: pulse 1.5s infinite;
+    }
+    
+    .tooltip {
+      position: relative;
+      display: inline-block;
+      cursor: help;
+    }
+    
+    .tooltip .tooltiptext {
+      visibility: hidden;
+      width: 200px;
+      background-color: var(--secondary);
+      color: #fff;
+      text-align: center;
+      border-radius: 6px;
+      padding: 10px;
+      position: absolute;
+      z-index: 1;
+      bottom: 125%;
+      left: 50%;
+      transform: translateX(-50%);
+      opacity: 0;
+      transition: opacity 0.3s;
+      font-size: 0.8rem;
+    }
+    
+    .tooltip:hover .tooltiptext {
+      visibility: visible;
+      opacity: 1;
+    }
+    
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+      margin: 30px 0;
+    }
+    
+    .feature {
+      background-color: #f8f9fa;
+      border-radius: 10px;
+      padding: 20px;
+      text-align: center;
+      transition: transform 0.3s ease;
+    }
+    
+    .feature:hover {
+      transform: translateY(-5px);
+    }
+    
+    .feature i {
+      font-size: 2rem;
+      color: var(--primary);
+      margin-bottom: 10px;
+    }
+    
+    .feature h3 {
+      font-size: 1.2rem;
+      margin-bottom: 10px;
+      color: var(--secondary);
+    }
+    
+    .feature p {
+      font-size: 0.9rem;
+      color: #666;
+    }
+    
+    .shake {
+      animation: shake 0.5s;
+    }
+    
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+      20%, 40%, 60%, 80% { transform: translateX(5px); }
+    }
+    
+    .fade-in {
+      animation: fadeIn 0.5s;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    
+    @keyframes pulse {
+      0% {
+        transform: scale(1);
+      }
+      50% {
+        transform: scale(1.2);
+      }
+      100% {
+        transform: scale(1);
+      }
+    }
+    
+    /* Media queries for responsive design */
+    @media (max-width: 768px) {
+      .format-options,
+      .quality-options {
+        grid-template-columns: 1fr;
+      }
+      
+      .controls {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container fade-in">
+    <div class="header">
+      <h1><i class="fab fa-twitter"></i> Twitter Downloader Pro</h1>
+      <p>Download tweets, videos, GIFs, and images from Twitter</p>
+    </div>
+    
+    <div class="tabs">
+      <div class="tab active" data-tab="tweet">Tweet Content</div>
+      <div class="tab" data-tab="user">User Content</div>
+    </div>
+    
+    <form id="downloadForm">
+      <div class="form-group">
+        <input type="url" id="url" class="form-control" placeholder="Enter Twitter URL or @username" required />
+      </div>
+      
+      <!-- Tweet Content Tab -->
+      <div class="tab-content active" id="tweetContent">
+        <div class="format-options">
+          <div class="format-option">
+            <input type="radio" id="videoHD" name="format" value="video-hd" checked />
+            <label for="videoHD">
+              <i class="fas fa-video"></i>
+              <div class="format-name">Video HD</div>
+              <div class="format-desc">Best quality</div>
+            </label>
+          </div>
+          
+          <div class="format-option">
+            <input type="radio" id="videoSD" name="format" value="video-sd" />
+            <label for="videoSD">
+              <i class="fas fa-film"></i>
+              <div class="format-name">Video SD</div>
+              <div class="format-desc">Lower quality, smaller size</div>
+            </label>
+          </div>
+          
+          <div class="format-option">
+            <input type="radio" id="gifFormat" name="format" value="gif" />
+            <label for="gifFormat">
+              <i class="fas fa-images"></i>
+              <div class="format-name">GIF</div>
+              <div class="format-desc">Animated GIF format</div>
+            </label>
+          </div>
+          
+          <div class="format-option">
+            <input type="radio" id="imageFormat" name="format" value="image" />
+            <label for="imageFormat">
+              <i class="fas fa-image"></i>
+              <div class="format-name">Images</div>
+              <div class="format-desc">All images in post</div>
+            </label>
+          </div>
+        </div>
+        
+        <div class="checkbox-group">
+          <input type="checkbox" id="includeTweet" checked />
+          <label for="includeTweet">Include tweet text and metadata</label>
+        </div>
+        
+        <div class="checkbox-group">
+          <input type="checkbox" id="includeReplies" />
+          <label for="includeReplies">Include top replies (max 5)</label>
+        </div>
+      </div>
+      
+      <!-- User Content Tab -->
+      <div class="tab-content" id="userContent">
+        <div class="format-options">
+          <div class="format-option">
+            <input type="radio" id="userVideos" name="user-format" value="videos" checked />
+            <label for="userVideos">
+              <i class="fas fa-video"></i>
+              <div class="format-name">Videos</div>
+              <div class="format-desc">All videos</div>
+            </label>
+          </div>
+          
+          <div class="format-option">
+            <input type="radio" id="userImages" name="user-format" value="images" />
+            <label for="userImages">
+              <i class="fas fa-image"></i>
+              <div class="format-name">Images</div>
+              <div class="format-desc">All images</div>
+            </label>
+          </div>
+          
+          <div class="format-option">
+            <input type="radio" id="userGifs" name="user-format" value="gifs" />
+            <label for="userGifs">
+              <i class="fas fa-images"></i>
+              <div class="format-name">GIFs</div>
+              <div class="format-desc">All GIFs</div>
+            </label>
+          </div>
+          
+          <div class="format-option">
+            <input type="radio" id="userAll" name="user-format" value="all" />
+            <label for="userAll">
+              <i class="fas fa-download"></i>
+              <div class="format-name">All Media</div>
+              <div class="format-desc">All videos, images & GIFs</div>
+            </label>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <h3>Number of tweets to check (most recent)</h3>
+          <input type="range" min="10" max="200" value="50" class="form-control" id="tweetCount">
+          <div style="display: flex; justify-content: space-between; margin-top: 5px;">
+            <span>10</span>
+            <span id="tweetCountValue">50</span>
+            <span>200</span>
+          </div>
+        </div>
+        
+        <div class="checkbox-group">
+          <input type="checkbox" id="includeRetweets" />
+          <label for="includeRetweets">Include retweets</label>
+        </div>
+        
+        <div class="checkbox-group">
+          <input type="checkbox" id="createUserFolder" checked />
+          <label for="createUserFolder">Create folder with username</label>
+        </div>
+      </div>
+      
+      <button type="submit" id="startBtn" class="btn btn-primary">
+        <i class="fas fa-download"></i> Start Download
+      </button>
+    </form>
+    
+    <div class="progress-container" id="progressContainer">
+      <svg class="progress-ring" width="120" height="120">
+        <circle class="progress-circle" cx="60" cy="60" r="54"></circle>
+        <circle class="progress-value" cx="60" cy="60" r="54" id="progressValue"></circle>
+      </svg>
+      <div class="progress-text" id="progressText">0%</div>
+    </div>
+    
+    <div class="output-container">
+      <div class="output-header">
+        <span>Download Status</span>
+        <span id="statusIndicator">Ready</span>
+      </div>
+      <div class="output-body" id="output">⏳ Awaiting download...</div>
+    </div>
+    
+    <div class="controls">
+      <button id="stopBtn" class="btn btn-danger" disabled>
+        <i class="fas fa-stop"></i> Stop Download
+      </button>
+    </div>
+    
+    <!-- Features section -->
+    <div class="features">
+      <div class="feature">
+        <i class="fas fa-video"></i>
+        <h3>High Quality Videos</h3>
+        <p>Download Twitter videos in the highest quality available</p>
+      </div>
+      <div class="feature">
+        <i class="fas fa-user"></i>
+        <h3>User Media</h3>
+        <p>Download all media from a specific Twitter user's profile</p>
+      </div>
+      <div class="feature">
+        <i class="fas fa-images"></i>
+        <h3>GIFs & Images</h3>
+        <p>Save GIFs and images from tweets in their original quality</p>
+      </div>
+    </div>
+    
+    <!-- Help section -->
+    <div class="help-container">
+      <h2>How to Use</h2>
+      
+      <div class="faq-item">
+        <div class="faq-question">
+          How do I download a single tweet's content? <span class="faq-toggle"><i class="fas fa-chevron-down"></i></span>
+        </div>
+        <div class="faq-answer">
+          <ol>
+            <li>Copy the URL of the tweet you want to download content from</li>
+            <li>Make sure the "Tweet Content" tab is selected</li>
+            <li>Paste the URL in the input field</li>
+            <li>Choose your preferred format (Video HD, Video SD, GIF, or Images)</li>
+            <li>Select any additional options you want</li>
+            <li>Click "Start Download"</li>
+            <li>Your files will be saved in the "downloads/twitter" folder</li>
+          </ol>
+        </div>
+      </div>
+      
+      <div class="faq-item">
+        <div class="faq-question">
+          How do I download media from a user's profile? <span class="faq-toggle"><i class="fas fa-chevron-down"></i></span>
+        </div>
+        <div class="faq-answer">
+          <ol>
+            <li>Find the Twitter username (handle) of the person</li>
+            <li>Click on the "User Content" tab</li>
+            <li>Enter the username with or without the @ symbol</li>
+            <li>Choose what type of media you want to download (Videos, Images, GIFs, or All)</li>
+            <li>Adjust the number of recent tweets to check using the slider</li>
+            <li>Click "Start Download"</li>
+            <li>Your files will be saved in a folder named after the username</li>
+          </ol>
+          <p><strong>Note:</strong> Downloading large amounts of content may take time depending on your internet connection.</p>
+        </div>
+      </div>
+      
+      <div class="faq-item">
+        <div class="faq-question">
+          What formats are available? <span class="faq-toggle"><i class="fas fa-chevron-down"></i></span>
+        </div>
+        <div class="faq-answer">
+          <ul>
+            <li><strong>Video HD:</strong> Downloads videos in the highest quality available</li>
+            <li><strong>Video SD:</strong> Downloads videos in standard definition (smaller file size)</li>
+            <li><strong>GIF:</strong> Downloads animated GIFs in their original format</li>
+            <li><strong>Images:</strong> Downloads all images attached to a tweet in full resolution</li>
+          </ul>
+        </div>
+      </div>
+      
+      <div class="faq-item">
+        <div class="faq-question">
+          Where are my downloaded files saved? <span class="faq-toggle"><i class="fas fa-chevron-down"></i></span>
+        </div>
+        <div class="faq-answer">
+          <p>All downloads are saved in the "downloads/twitter" folder in the same directory as this application. For user profile media, a subfolder will be created with the username if that option is selected.</p>
+          <p>Files are named based on tweet ID and content type to ensure they are unique.</p>
+        </div>
+      </div>
+      
+      <div class="faq-item">
+        <div class="faq-question">
+          Common issues and troubleshooting <span class="faq-toggle"><i class="fas fa-chevron-down"></i></span>
+        </div>
+        <div class="faq-answer">
+          <ul>
+            <li><strong>Rate limiting:</strong> Twitter may limit the number of requests you can make. If you see an error about rate limiting, wait 15 minutes before trying again.</li>
+            <li><strong>Protected tweets:</strong> You cannot download content from protected/private accounts.</li>
+            <li><strong>No media found:</strong> If the user or tweet doesn't contain the type of media you selected, you'll see a "No media found" message.</li>
+            <li><strong>Authentication errors:</strong> Some content might require authentication. The downloader uses anonymous access which may limit some downloads.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Tab switching functionality
+    const tabs = document.querySelectorAll('.tab');
+    const tabContents = document.querySelectorAll('.tab-content');
+    
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        // Remove active class from all tabs and contents
+        tabs.forEach(t => t.classList.remove('active'));
+        tabContents.forEach(c => c.classList.remove('active'));
+        
+        // Add active class to clicked tab and corresponding content
+        tab.classList.add('active');
+        const contentId = tab.getAttribute('data-tab') + 'Content';
+        document.getElementById(contentId).classList.add('active');
+      });
+    });
+    
+    // FAQ accordion functionality
+    const faqItems = document.querySelectorAll('.faq-item');
+    
+    faqItems.forEach(item => {
+      const question = item.querySelector('.faq-question');
+      question.addEventListener('click', () => {
+        item.classList.toggle('active');
+      });
+    });
+    
+    // Tweet count slider
+    const tweetCountSlider = document.getElementById('tweetCount');
+    const tweetCountValue = document.getElementById('tweetCountValue');
+    
+    tweetCountSlider.addEventListener('input', () => {
+      tweetCountValue.textContent = tweetCountSlider.value;
+    });
+    
+    // Form elements
+    const form = document.getElementById('downloadForm');
+    const output = document.getElementById('output');
+    const stopBtn = document.getElementById('stopBtn');
+    const startBtn = document.getElementById('startBtn');
+    const progressContainer = document.getElementById('progressContainer');
+    const progressValue = document.getElementById('progressValue');
+    const progressText = document.getElementById('progressText');
+    const statusIndicator = document.getElementById('statusIndicator');
+    
+    let downloadProcess;
+    let progressInterval;
+    
+    // Calculate circumference for progress circle
+    const radius = 54;
+    const circumference = 2 * Math.PI * radius;
+    progressValue.style.strokeDasharray = `${circumference} ${circumference}`;
+    progressValue.style.strokeDashoffset = circumference;
+    
+    // Function to update progress
+    function updateProgress(percent) {
+      const offset = circumference - (percent / 100 * circumference);
+      progressValue.style.strokeDashoffset = offset;
+      progressText.textContent = `${Math.round(percent)}%`;
+    }
+    
+    // Function to update status indicator
+    function updateStatus(status, isError = false) {
+      statusIndicator.textContent = status;
+      if (isError) {
+        statusIndicator.style.color = 'var(--danger)';
+      } else {
+        statusIndicator.style.color = 'var(--success)';
+      }
+    }
+    
+    // Function to build download command based on selected options
+    function buildDownloadOptions() {
+      const url = document.getElementById('url').value;
+      const activeTab = document.querySelector('.tab.active').getAttribute('data-tab');
+      let options = {};
+      
+      options.url = url;
+      options.platform = 'twitter';
+      
+      if (activeTab === 'tweet') {
+        // Get format selection for tweet content
+        const formatRadios = document.getElementsByName('format');
+        for (const radio of formatRadios) {
+          if (radio.checked) {
+            options.format = radio.value;
+            break;
+          }
+        }
+        
+        // Get additional options
+        options.includeTweet = document.getElementById('includeTweet').checked;
+        options.includeReplies = document.getElementById('includeReplies').checked;
+      } else if (activeTab === 'user') {
+        // Set user flag
+        options.isUser = true;
+        
+        // Get format selection for user content
+        const formatRadios = document.getElementsByName('user-format');
+        for (const radio of formatRadios) {
+          if (radio.checked) {
+            options.format = radio.value;
+            break;
+          }
+        }
+        
+        // Get user options
+        options.tweetCount = document.getElementById('tweetCount').value;
+        options.includeRetweets = document.getElementById('includeRetweets').checked;
+        options.createFolder = document.getElementById('createUserFolder').checked;
+      }
+      
+      return options;
+    }
+    
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const url = document.getElementById('url').value;
+      
+      if (!url) {
+        document.getElementById('url').classList.add('shake');
+        setTimeout(() => {
+          document.getElementById('url').classList.remove('shake');
+        }, 500);
+        return;
+      }
+      
+      // Get all download options
+      const downloadOptions = buildDownloadOptions();
+      
+      // Reset UI
+      output.textContent = "⏳ Starting download...";
+      updateStatus("Initializing");
+      progressContainer.classList.add('active');
+      updateProgress(0);
+      
+      // Disable start button, enable stop button
+      startBtn.disabled = true;
+      stopBtn.disabled = false;
+      
+      try {
+        // Make request to server
+        downloadProcess = await fetch('/twitter', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(downloadOptions),
+        });
+        
+        if (!downloadProcess.ok) {
+          throw new Error(`Server error: ${downloadProcess.status}`);
+        }
+        
+        const reader = downloadProcess.body.getReader();
+        const decoder = new TextDecoder();
+        
+        output.textContent = "";
+        let progress = 0;
+        let downloadStarted = false;
+        
+        // Process stream from server
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          
+          const chunk = decoder.decode(value, { stream: true });
+          
+          // Process the chunk of data
+          output.textContent += chunk;
+          output.scrollTop = output.scrollHeight; // Auto-scroll to the latest output
+          
+          // Extract progress percentage if available
+          const progressMatch = chunk.match(/Progress: (\d+)%/);
+          if (progressMatch) {
+            progress = parseInt(progressMatch[1]);
+            updateProgress(progress);
+            
+            if (!downloadStarted && progress > 0) {
+              downloadStarted = true;
+              updateStatus("Downloading");
+            }
+          }
+          
+          // Check for success message
+          if (chunk.includes("Download completed")) {
+            updateStatus("Completed");
+            updateProgress(100);
+          }
+          
+          // Check for error messages
+          if (chunk.includes("Error:")) {
+            updateStatus("Failed", true);
+          }
+        }
+        
+        // Reset UI after download completes
+        startBtn.disabled = false;
+        stopBtn.disabled = true;
+        
+        // Add success message with icon if download was successful
+        if (output.textContent.includes("Download completed")) {
+          const successMsg = document.createElement('div');
+          successMsg.innerHTML = '<i class="fas fa-check-circle success-icon"></i> Download completed successfully!';
+          successMsg.style.textAlign = 'center';
+          successMsg.style.padding = '15px';
+          output.appendChild(successMsg);
+        }
+        
+      } catch (error) {
+        // Handle errors
+        output.textContent += `\n❌ Error: ${error.message}`;
+        updateStatus("Error", true);
+        startBtn.disabled = false;
+        stopBtn.disabled = true;
+      }
+    });
+    
+    // Stop button functionality
+    stopBtn.addEventListener('click', async () => {
+      if (downloadProcess) {
+        try {
+          // Send abort signal to server
+          await fetch('/download/abort', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: 'current' })
+          });
+          
+          output.textContent += "\n🛑 Download stopped by user.";
+          updateStatus("Stopped");
+          
+          // Reset UI
+          startBtn.disabled = false;
+          stopBtn.disabled = true;
+          progressContainer.classList.remove('active');
+          
+        } catch (error) {
+          output.textContent += `\n❌ Error stopping download: ${error.message}`;
+        }
+      }
+    });
+    
+    // URL validation helper
+    function isValidTwitterUrl(url) {
+      const twitterUrlRegex = /^(https?:\/\/)?(www\.)?twitter\.com\/[a-zA-Z0-9_]+\/status\/\d+/;
+      return twitterUrlRegex.test(url);
+    }
+    
+    function isValidTwitterUsername(username) {
+      // Remove @ if present
+      if (username.startsWith('@')) {
+        username = username.substring(1);
+      }
+      
+      const usernameRegex = /^[a-zA-Z0-9_]{1,15}$/;
+      return usernameRegex.test(username);
+    }
+    
+    // URL input validation
+    const urlInput = document.getElementById('url');
+    
+    urlInput.addEventListener('input', () => {
+      const url = urlInput.value.trim();
+      const activeTab = document.querySelector('.tab.active').getAttribute('data-tab');
+      
+      if (activeTab === 'tweet') {
+        if (url && !isValidTwitterUrl(url)) {
+          urlInput.style.borderColor = 'var(--warning)';
+        } else {
+          urlInput.style.borderColor = '#ddd';
+        }
+      } else if (activeTab === 'user') {
+        // For user tab, accept either a username or profile URL
+        if (url) {
+          const isUsername = url.startsWith('@') || !url.includes('/');
+          
+          if (isUsername) {
+            const username = url.startsWith('@') ? url.substring(1) : url;
+            if (!isValidTwitterUsername(username)) {
+              urlInput.style.borderColor = 'var(--warning)';
+            } else {
+              urlInput.style.borderColor = '#ddd';
+            }
+          } else {
+            const profileUrlRegex = /^(https?:\/\/)?(www\.)?twitter\.com\/[a-zA-Z0-9_]+\/?$/;
+            if (!profileUrlRegex.test(url)) {
+              urlInput.style.borderColor = 'var(--warning)';
+            } else {
+              urlInput.style.borderColor = '#ddd';
+            }
+          }
+        } else {
+          urlInput.style.borderColor = '#ddd';
+        }
+      }
+    });
+    
+    // Simulated download for demo/preview purposes
+    function simulateDownload() {
+      output.textContent = "⏳ Starting download process...\n";
+      updateStatus("Initializing");
+      progressContainer.classList.add('active');
+      
+      let progress = 0;
+      let steps = [
+        "🔍 Analyzing Twitter URL...",
+        "✅ URL validation successful",
+        "🔄 Connecting to Twitter API...",
+        "✅ Connection established",
+        "📡 Fetching media metadata...",
+        "✅ Found video content",
+        "📊 Analyzing available formats...",
+        "🎬 Selected highest quality (1280x720, 30fps)",
+        "⬇️ Starting video download...",
+        "Progress: 10%",
+        "Progress: 25%",
+        "Progress: 42%",
+        "Progress: 56%",
+        "Progress: 73%",
+        "Progress: 89%",
+        "Progress: 98%",
+        "✅ Video download completed",
+        "💾 Saving to disk...",
+        "📁 File saved to: downloads/twitter/tweet_1234567890.mp4",
+        "✨ Download completed successfully!"
+      ];
+      
+      let i = 0;
+      let interval = setInterval(() => {
+        if (i < steps.length) {
+          output.textContent += "\n" + steps[i];
+          output.scrollTop = output.scrollHeight;
+          
+          const progressMatch = steps[i].match(/Progress: (\d+)%/);
+          if (progressMatch) {
+            progress = parseInt(progressMatch[1]);
+            updateProgress(progress);
+            updateStatus("Downloading");
+          }
+          
+          if (steps[i].includes("Download completed")) {
+            updateStatus("Completed");
+            updateProgress(100);
+            
+            const successMsg = document.createElement('div');
+            successMsg.innerHTML = '<i class="fas fa-check-circle success-icon"></i> Download completed successfully!';
+            successMsg.style.textAlign = 'center';
+            successMsg.style.padding = '15px';
+            setTimeout(() => {
+              output.appendChild(successMsg);
+            }, 500);
+            
+            startBtn.disabled = false;
+            stopBtn.disabled = true;
+          }
+          
+          i++;
+        } else {
+          clearInterval(interval);
+        }
+      }, 500);
+      
+      return interval;
+    }
+    
+    // Display current app version in the footer
+    document.addEventListener('DOMContentLoaded', () => {
+      // Initialize tooltips
+      const tooltips = document.querySelectorAll('.tooltip');
+      tooltips.forEach(tooltip => {
+        // Initialize tooltip functionality if needed
+      });
+      
+      // Set demo mode for preview purposes
+      if (window.location.href.includes('demo') || window.location.href.includes('preview')) {
+        document.getElementById('startBtn').addEventListener('click', (e) => {
+          e.preventDefault();
+          startBtn.disabled = true;
+          stopBtn.disabled = false;
+          simulateDownload();
+        });
+      }
+    });
+  </script>

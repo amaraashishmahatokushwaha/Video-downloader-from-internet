@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Downloader Hub</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Outfit', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(270deg, #ff6ec4, #7873f5, #4ADEDE);
+            background-size: 600% 600%;
+            animation: gradientBG 15s ease infinite;
+            color: white;
+            text-align: center;
+            overflow-x: hidden;
+            padding: 3rem 1rem;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            animation: slideDown 1s ease-out forwards;
+            opacity: 0;
+            transform: translateY(-50px);
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            text-shadow: 2px 2px 10px rgba(0,0,0,0.3);
+            background: linear-gradient(90deg, #ffffff, #e0e0ff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .tagline {
+            font-size: 1.3rem;
+            margin-bottom: 3rem;
+            opacity: 0.9;
+            animation: fadeIn 1.2s ease-out 0.5s forwards;
+            opacity: 0;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 0.9; }
+        }
+
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+            width: 100%;
+        }
+
+        .service-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 2rem;
+            backdrop-filter: blur(8px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-decoration: none;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            opacity: 0;
+            transform: translateY(30px);
+            animation: slideUp 0.5s ease-out forwards;
+        }
+
+        .service-card:nth-child(1) { animation-delay: 0.2s; }
+        .service-card:nth-child(2) { animation-delay: 0.4s; }
+        .service-card:nth-child(3) { animation-delay: 0.6s; }
+        .service-card:nth-child(4) { animation-delay: 0.8s; }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .service-card:hover {
+            transform: translateY(-10px) scale(1.03);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .service-icon {
+            font-size: 3rem;
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+
+        .service-icon::after {
+            content: '';
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            z-index: -1;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            transition: all 0.3s ease;
+        }
+
+        .service-card:hover .service-icon::after {
+            width: 70px;
+            height: 70px;
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .service-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .service-desc {
+            font-size: 0.95rem;
+            opacity: 0.9;
+            margin-bottom: 1.5rem;
+        }
+
+        .service-btn {
+            padding: 0.8rem 1.5rem;
+            border-radius: 30px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .service-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.05);
+        }
+
+        .youtube-card { border-top: 4px solid #FF0000; }
+        .twitter-card { border-top: 4px solid #1DA1F2; }
+        .instagram-card { border-top: 4px solid #E1306C; }
+        .facebook-card { border-top: 4px solid #1877F2; }
+
+        .youtube-card .service-icon { color: #FF0000; }
+        .twitter-card .service-icon { color: #1DA1F2; }
+        .instagram-card .service-icon { color: #E1306C; }
+        .facebook-card .service-icon { color: #1877F2; }
+
+        .features {
+            margin-top: 2rem;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 2rem;
+            opacity: 0;
+            animation: fadeIn 1s ease-out 1s forwards;
+        }
+
+        .feature {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .feature i {
+            font-size: 1.2rem;
+        }
+
+        footer {
+            margin-top: 3rem;
+            padding: 1rem 0;
+            font-size: 0.9rem;
+            opacity: 0.8;
+            animation: fadeIn 1s ease-out 1.2s forwards;
+            opacity: 0;
+        }
+
+        .floating-bubbles {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .bubble {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            animation: float 15s infinite;
+            opacity: 0;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(100vh) scale(0);
+                opacity: 0;
+            }
+            50% {
+                opacity: 0.8;
+            }
+            100% {
+                transform: translateY(-100px) scale(1);
+                opacity: 0;
+            }
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.5rem;
+            }
+
+            .tagline {
+                font-size: 1.1rem;
+            }
+
+            .services-grid {
+                grid-template-columns: 1fr;
+                max-width: 400px;
+                margin: 0 auto 2rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 2rem;
+            }
+
+            .service-card {
+                padding: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-bubbles" id="bubbles"></div>
+
+    <div class="container">
+        <div class="header">
+            <h1>✨ Video Downloader Hub ✨</h1>
+            <p class="tagline">Download your favorite content from multiple platforms in high quality</p>
+        </div>
+
+        <div class="services-grid">
+            <a href="/youtube" class="service-card youtube-card">
+                <div class="service-icon">
+                    <i class="fab fa-youtube"></i>
+                </div>
+                <h3 class="service-title">YouTube Downloader</h3>
+                <p class="service-desc">Download videos, playlists, and audio in multiple formats and qualities</p>
+                <button class="service-btn">Download Now</button>
+            </a>
+
+            <a href="/twitter" class="service-card twitter-card">
+                <div class="service-icon">
+                    <i class="fab fa-twitter"></i>
+                </div>
+                <h3 class="service-title">Twitter Downloader</h3>
+                <p class="service-desc">Save videos, GIFs and images from tweets without watermarks</p>
+                <button class="service-btn">Download Now</button>
+            </a>
+
+            <a href="/instagram" class="service-card instagram-card">
+                <div class="service-icon">
+                    <i class="fab fa-instagram"></i>
+                </div>
+                <h3 class="service-title">Instagram Downloader</h3>
+                <p class="service-desc">Save posts, stories, reels, and IGTV videos in original quality</p>
+                <button class="service-btn">Download Now</button>
+            </a>
+
+            <a href="/facebook" class="service-card facebook-card">
+                <div class="service-icon">
+                    <i class="fab fa-facebook-f"></i>
+                </div>
+                <h3 class="service-title">Facebook Downloader</h3>
+                <p class="service-desc">Download videos, photos and stories from Facebook in HD quality</p>
+                <button class="service-btn">Download Now</button>
+            </a>
+        </div>
+
+        <div class="features">
+            <div class="feature">
+                <i class="fas fa-bolt"></i>
+                <span>Fast Downloads</span>
+            </div>
+            <div class="feature">
+                <i class="fas fa-shield-alt"></i>
+                <span>100% Secure</span>
+            </div>
+            <div class="feature">
+                <i class="fas fa-video"></i>
+                <span>HD Quality</span>
+            </div>
+            <div class="feature">
+                <i class="fas fa-infinity"></i>
+                <span>No Limits</span>
+            </div>
+        </div>
+
+        <footer>
+            &copy; 2025 Video Downloader Hub - The ultimate tool for downloading videos
+        </footer>
+    </div>
+
+    <script>
+        // Create floating bubbles
+        const bubblesContainer = document.getElementById('bubbles');
+        const bubbleCount = 15;
+        
+        for (let i = 0; i < bubbleCount; i++) {
+            const bubble = document.createElement('div');
+            bubble.classList.add('bubble');
+            
+            // Random position, size and delay
+            const size = Math.random() * 100 + 50;
+            const left = Math.random() * 100;
+            const delay = Math.random() * 10;
+            const duration = Math.random() * 10 + 10;
+            
+            bubble.style.width = `${size}px`;
+            bubble.style.height = `${size}px`;
+            bubble.style.left = `${left}%`;
+            bubble.style.animationDelay = `${delay}s`;
+            bubble.style.animationDuration = `${duration}s`;
+            
+            bubblesContainer.appendChild(bubble);
+        }
+
+        // Add hover effect to service cards
+        document.querySelectorAll('.service-card').forEach(card => {
+            card.addEventListener('mousemove', (e) => {
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                const centerX = rect.width / 2;
+                const centerY = rect.height / 2;
+                
+                const angleX = (centerY - y) / 30;
+                const angleY = (x - centerX) / 30;
+                
+                card.style.transform = `perspective(1000px) rotateX(${angleX}deg) rotateY(${angleY}deg) translateY(-10px) scale(1.03)`;
+            });
+            
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = '';
+            });
+        });
+    </script>
+</body>
+</html>
