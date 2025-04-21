@@ -74,17 +74,19 @@ def instafacebook():
 # === FILE HANDLING ROUTES ===
 @app.route('/files/<platform>', methods=['GET'])
 def list_files(platform):
+    platform_folder = os.path.join(DOWNLOAD_FOLDER, platform)
     files = []
-    for root, _, filenames in os.walk(DOWNLOAD_FOLDER):
-        for filename in filenames:
-            if filename.endswith(('.mp4', '.jpg', '.jpeg', '.png', '.json')):
-                relative_path = os.path.relpath(os.path.join(root, filename), DOWNLOAD_FOLDER)
-                files.append(relative_path)
+    if os.path.exists(platform_folder):
+        for root, _, filenames in os.walk(platform_folder):
+            for filename in filenames:
+                if filename.endswith(('.mp4', '.jpg', '.jpeg', '.png', '.json')):
+                    relative_path = os.path.relpath(os.path.join(root, filename), platform_folder)
+                    files.append(relative_path)
     return jsonify(files)
 
 @app.route('/file/<platform>/<path:filename>', methods=['GET'])
 def serve_file(platform, filename):
-    file_path = os.path.join(DOWNLOAD_FOLDER, filename)
+    file_path = os.path.join(DOWNLOAD_FOLDER, platform, filename)
     if os.path.exists(file_path):
         return send_file(file_path, as_attachment=True)
     return jsonify({"error": "File not found"}), 404
@@ -116,6 +118,7 @@ def generate_command(data):
     is_playlist = data.get("isPlaylist", False)
     playlist_start = data.get("playlistStart")
     playlist_end = data.get("playlistEnd")
+    create_folder = data.get("createFolder", True)
     platform = data.get("platform", "youtube")
 
     cmd = ["yt-dlp", "--no-warnings", "--progress", "--ignore-errors"]
@@ -149,7 +152,10 @@ def generate_command(data):
             cmd.append("--no-playlist")
         
         # Output template
-        output_tpl = os.path.join(DOWNLOAD_FOLDER, "%(title)s.%(ext)s")
+        if is_playlist and create_folder:
+            output_tpl = os.path.join(DOWNLOAD_FOLDER, "youtube/%(playlist_title)s/%(title)s.%(ext)s")
+        else:
+            output_tpl = os.path.join(DOWNLOAD_FOLDER, "youtube/%(title)s.%(ext)s")
     
     elif platform == "twitter":
         if fmt == "video-hd":
@@ -164,7 +170,10 @@ def generate_command(data):
             cmd.extend(["-f", quality, "--merge-output-format", "mp4"])
         
         # Output template
-        output_tpl = os.path.join(DOWNLOAD_FOLDER, "%(title)s.%(ext)s")
+        if data.get("isUser", False) and create_folder:
+            output_tpl = os.path.join(DOWNLOAD_FOLDER, "twitter/%(uploader)s/%(title)s.%(ext)s")
+        else:
+            output_tpl = os.path.join(DOWNLOAD_FOLDER, "twitter/%(title)s.%(ext)s")
     
     elif platform == "instagram":
         if fmt in ["video", "post", "reel", "story"]:
@@ -186,7 +195,10 @@ def generate_command(data):
             cmd.extend(["--playlist-end", str(data.get("contentCount", 12))])
         
         # Output template
-        output_tpl = os.path.join(DOWNLOAD_FOLDER, "%(title)s.%(ext)s")
+        if data.get("isProfile", False) and create_folder:
+            output_tpl = os.path.join(DOWNLOAD_FOLDER, "instagram/%(uploader)s/%(title)s.%(ext)s")
+        else:
+            output_tpl = os.path.join(DOWNLOAD_FOLDER, "instagram/%(title)s.%(ext)s")
     
     elif platform == "facebook":
         if fmt == "video":
@@ -199,7 +211,10 @@ def generate_command(data):
             cmd.extend(["--playlist-end", str(data.get("videoCount", 10))])
         
         # Output template
-        output_tpl = os.path.join(DOWNLOAD_FOLDER, "%(title)s.%(ext)s")
+        if data.get("isPage", False) and create_folder:
+            output_tpl = os.path.join(DOWNLOAD_FOLDER, "facebook/%(uploader)s/%(title)s.%(ext)s")
+        else:
+            output_tpl = os.path.join(DOWNLOAD_FOLDER, "facebook/%(title)s.%(ext)s")
 
     cmd.extend(["-o", output_tpl])
     cmd.append(url)
