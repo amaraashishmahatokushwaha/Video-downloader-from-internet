@@ -21,19 +21,11 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            background: linear-gradient(270deg, #ff6ec4, #7873f5, #4ADEDE);
-            background-size: 600% 600%;
-            animation: gradientBG 15s ease infinite;
-            color: white;
+            background: #ffffff;
+            color: #333;
             text-align: center;
             overflow-x: hidden;
             padding: 3rem 1rem;
-        }
-
-        @keyframes gradientBG {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
         }
 
         .container {
@@ -63,49 +55,52 @@
             font-size: 3.5rem;
             font-weight: 700;
             margin-bottom: 1.5rem;
-            text-shadow: 2px 2px 10px rgba(0,0,0,0.3);
-            background: linear-gradient(90deg, #ffffff, #e0e0ff);
+            background: linear-gradient(90deg, #6b46c1, #3182ce);
             -webkit-background-clip: text;
             background-clip: text;
             color: transparent;
+            text-shadow: 1px 1px 1px rgba(0,0,0,0.05);
         }
 
         .tagline {
             font-size: 1.3rem;
             margin-bottom: 3rem;
-            opacity: 0.9;
+            color: #718096;
             animation: fadeIn 1.2s ease-out 0.5s forwards;
             opacity: 0;
         }
 
         @keyframes fadeIn {
             from { opacity: 0; }
-            to { opacity: 0.9; }
+            to { opacity: 1; }
         }
 
         .services-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 2rem;
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
             margin-bottom: 3rem;
             width: 100%;
         }
 
         .service-card {
-            background: rgba(255, 255, 255, 0.1);
+            background: #ffffff;
             border-radius: 16px;
             padding: 2rem;
-            backdrop-filter: blur(8px);
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
             transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             text-decoration: none;
-            color: white;
+            color: #333;
             display: flex;
             flex-direction: column;
             align-items: center;
             opacity: 0;
             transform: translateY(30px);
             animation: slideUp 0.5s ease-out forwards;
+            flex: 1;
+            min-width: 210px;
+            max-width: 270px;
+            cursor: pointer;
         }
 
         .service-card:nth-child(1) { animation-delay: 0.2s; }
@@ -125,75 +120,85 @@
         }
 
         .service-card:hover {
-            transform: translateY(-10px) scale(1.03);
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
-            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-10px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12);
         }
 
         .service-icon {
-            font-size: 3rem;
+            font-size: 2.5rem;
             margin-bottom: 1.5rem;
             position: relative;
-        }
-
-        .service-icon::after {
-            content: '';
-            position: absolute;
-            width: 60px;
-            height: 60px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 50%;
-            z-index: -1;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            transition: all 0.3s ease;
-        }
-
-        .service-card:hover .service-icon::after {
             width: 70px;
             height: 70px;
-            background: rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+
+        .youtube-card .service-icon {
+            background: rgba(255, 0, 0, 0.1);
+            color: #FF0000;
+        }
+        
+        .twitter-card .service-icon {
+            background: rgba(29, 161, 242, 0.1);
+            color: #1DA1F2;
+        }
+        
+        .instagram-card .service-icon {
+            background: rgba(225, 48, 108, 0.1);
+            color: #E1306C;
+        }
+        
+        .facebook-card .service-icon {
+            background: rgba(24, 119, 242, 0.1);
+            color: #1877F2;
         }
 
         .service-title {
-            font-size: 1.5rem;
+            font-size: 1.3rem;
             font-weight: 600;
             margin-bottom: 1rem;
+            color: #2D3748;
         }
 
         .service-desc {
-            font-size: 0.95rem;
-            opacity: 0.9;
+            font-size: 0.9rem;
+            color: #718096;
             margin-bottom: 1.5rem;
         }
 
         .service-btn {
             padding: 0.8rem 1.5rem;
             border-radius: 30px;
-            background: rgba(255, 255, 255, 0.2);
             border: none;
             color: white;
             font-weight: 500;
             cursor: pointer;
             transition: all 0.3s ease;
-            backdrop-filter: blur(5px);
+        }
+
+        .youtube-card .service-btn {
+            background: #FF0000;
+        }
+        
+        .twitter-card .service-btn {
+            background: #1DA1F2;
+        }
+        
+        .instagram-card .service-btn {
+            background: #E1306C;
+        }
+        
+        .facebook-card .service-btn {
+            background: #1877F2;
         }
 
         .service-btn:hover {
-            background: rgba(255, 255, 255, 0.3);
             transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
         }
-
-        .youtube-card { border-top: 4px solid #FF0000; }
-        .twitter-card { border-top: 4px solid #1DA1F2; }
-        .instagram-card { border-top: 4px solid #E1306C; }
-        .facebook-card { border-top: 4px solid #1877F2; }
-
-        .youtube-card .service-icon { color: #FF0000; }
-        .twitter-card .service-icon { color: #1DA1F2; }
-        .instagram-card .service-icon { color: #E1306C; }
-        .facebook-card .service-icon { color: #1877F2; }
 
         .features {
             margin-top: 2rem;
@@ -209,20 +214,210 @@
             display: flex;
             align-items: center;
             gap: 0.5rem;
+            color: #4A5568;
         }
 
         .feature i {
             font-size: 1.2rem;
+            color: #6B46C1;
         }
 
         footer {
             margin-top: 3rem;
             padding: 1rem 0;
             font-size: 0.9rem;
-            opacity: 0.8;
+            color: #A0AEC0;
             animation: fadeIn 1s ease-out 1.2s forwards;
             opacity: 0;
         }
+
+        .how-to-use {
+            margin-top: 4rem;
+            padding: 2rem 0;
+            text-align: center;
+            width: 100%;
+        }
+
+        .how-to-use h2 {
+            font-size: 2rem;
+            color: #2D3748;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .platform-steps-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .platform-trigger {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem 2rem;
+            background: #f8f9fa;
+            border-radius: 10px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+            color: #4A5568;
+            font-weight: 600;
+            gap: 10px;
+            min-width: 200px;
+        }
+
+        .platform-trigger:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .platform-trigger i {
+            font-size: 1.5rem;
+        }
+
+        .platform-trigger.youtube { border-left: 4px solid #FF0000; }
+        .platform-trigger.twitter { border-left: 4px solid #1DA1F2; }
+        .platform-trigger.instagram { border-left: 4px solid #E1306C; }
+        .platform-trigger.facebook { border-left: 4px solid #1877F2; }
+
+        .platform-steps {
+            display: none;
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            text-align: left;
+            animation-duration: 0.6s;
+            animation-fill-mode: both;
+        }
+
+        .platform-steps.active {
+            display: block;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInScale {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes bounceIn {
+            from,
+            20%,
+            40%,
+            60%,
+            80%,
+            to {
+                animation-timing-function: cubic-bezier(0.215, 0.61, 0.355, 1);
+            }
+            0% {
+                opacity: 0;
+                transform: scale3d(0.3, 0.3, 0.3);
+            }
+            20% {
+                transform: scale3d(1.1, 1.1, 1.1);
+            }
+            40% {
+                transform: scale3d(0.9, 0.9, 0.9);
+            }
+            60% {
+                opacity: 1;
+                transform: scale3d(1.03, 1.03, 1.03);
+            }
+            80% {
+                transform: scale3d(0.97, 0.97, 0.97);
+            }
+            to {
+                opacity: 1;
+                transform: scale3d(1, 1, 1);
+            }
+        }
+
+        .platform-steps h3 {
+            font-size: 1.5rem;
+            color: #2D3748;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .platform-steps ol {
+            margin-left: 2rem;
+            counter-reset: step-counter;
+            list-style-type: none;
+        }
+
+        .platform-steps li {
+            margin-bottom: 1.5rem;
+            color: #4A5568;
+            position: relative;
+            padding-left: 2.5rem;
+            line-height: 1.5;
+            opacity: 0;
+            animation: fadeInUp 0.5s ease-out forwards;
+        }
+
+        .platform-steps li:before {
+            counter-increment: step-counter;
+            content: counter(step-counter);
+            position: absolute;
+            left: 0;
+            top: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background-color: #6B46C1;
+            color: white;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .platform-steps li:nth-child(1) { animation-delay: 0.1s; }
+        .platform-steps li:nth-child(2) { animation-delay: 0.2s; }
+        .platform-steps li:nth-child(3) { animation-delay: 0.3s; }
+        .platform-steps li:nth-child(4) { animation-delay: 0.4s; }
+        .platform-steps li:nth-child(5) { animation-delay: 0.5s; }
+
+        .youtube-steps h3 i { color: #FF0000; }
+        .twitter-steps h3 i { color: #1DA1F2; }
+        .instagram-steps h3 i { color: #E1306C; }
+        .facebook-steps h3 i { color: #1877F2; }
 
         .floating-bubbles {
             position: absolute;
@@ -237,7 +432,7 @@
         .bubble {
             position: absolute;
             border-radius: 50%;
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(107, 70, 193, 0.05);
             animation: float 15s infinite;
             opacity: 0;
         }
@@ -256,6 +451,16 @@
             }
         }
 
+        @media (max-width: 1100px) {
+            .services-grid {
+                flex-wrap: wrap;
+            }
+            
+            .service-card {
+                min-width: 240px;
+            }
+        }
+
         @media (max-width: 768px) {
             h1 {
                 font-size: 2.5rem;
@@ -264,11 +469,9 @@
             .tagline {
                 font-size: 1.1rem;
             }
-
-            .services-grid {
-                grid-template-columns: 1fr;
-                max-width: 400px;
-                margin: 0 auto 2rem;
+            
+            .platform-steps {
+                padding: 1.5rem;
             }
         }
 
@@ -279,6 +482,11 @@
 
             .service-card {
                 padding: 1.5rem;
+                min-width: 100%;
+            }
+            
+            .platform-trigger {
+                width: 100%;
             }
         }
     </style>
@@ -293,41 +501,41 @@
         </div>
 
         <div class="services-grid">
-            <a href="/youtube" class="service-card youtube-card">
+            <div class="service-card youtube-card">
                 <div class="service-icon">
                     <i class="fab fa-youtube"></i>
                 </div>
                 <h3 class="service-title">YouTube Downloader</h3>
-                <p class="service-desc">Download videos, playlists, and audio in multiple formats and qualities</p>
+                <p class="service-desc">Download videos, playlists, and audio in multiple formats</p>
                 <button class="service-btn">Download Now</button>
-            </a>
+            </div>
 
-            <a href="/twitter" class="service-card twitter-card">
+            <div class="service-card twitter-card">
                 <div class="service-icon">
                     <i class="fab fa-twitter"></i>
                 </div>
                 <h3 class="service-title">Twitter Downloader</h3>
-                <p class="service-desc">Save videos, GIFs and images from tweets without watermarks</p>
+                <p class="service-desc">Save videos, GIFs without watermarks</p>
                 <button class="service-btn">Download Now</button>
-            </a>
+            </div>
 
-            <a href="/instagram" class="service-card instagram-card">
+            <div class="service-card instagram-card">
                 <div class="service-icon">
                     <i class="fab fa-instagram"></i>
                 </div>
                 <h3 class="service-title">Instagram Downloader</h3>
-                <p class="service-desc">Save posts, stories, reels, and IGTV videos in original quality</p>
+                <p class="service-desc">Save posts, stories, reels in original quality</p>
                 <button class="service-btn">Download Now</button>
-            </a>
+            </div>
 
-            <a href="/facebook" class="service-card facebook-card">
+            <div class="service-card facebook-card">
                 <div class="service-icon">
                     <i class="fab fa-facebook-f"></i>
                 </div>
                 <h3 class="service-title">Facebook Downloader</h3>
-                <p class="service-desc">Download videos, photos and stories from Facebook in HD quality</p>
+                <p class="service-desc">Download videos, photos and stories in HD quality</p>
                 <button class="service-btn">Download Now</button>
-            </a>
+            </div>
         </div>
 
         <div class="features">
@@ -349,8 +557,79 @@
             </div>
         </div>
 
+        <div class="how-to-use">
+            <h2>How to Download Videos</h2>
+            <p>Click on any platform below to see step-by-step instructions</p>
+            
+            <div class="platform-steps-container">
+                <div class="platform-trigger youtube" data-platform="youtube">
+                    <i class="fab fa-youtube" style="color: #FF0000;"></i>
+                    <span>YouTube</span>
+                </div>
+                
+                <div class="platform-trigger twitter" data-platform="twitter">
+                    <i class="fab fa-twitter" style="color: #1DA1F2;"></i>
+                    <span>Twitter</span>
+                </div>
+                
+                <div class="platform-trigger instagram" data-platform="instagram">
+                    <i class="fab fa-instagram" style="color: #E1306C;"></i>
+                    <span>Instagram</span>
+                </div>
+                
+                <div class="platform-trigger facebook" data-platform="facebook">
+                    <i class="fab fa-facebook-f" style="color: #1877F2;"></i>
+                    <span>Facebook</span>
+                </div>
+            </div>
+            
+            <div class="platform-steps youtube-steps" id="youtube-steps">
+                <h3><i class="fab fa-youtube"></i> YouTube Download Instructions</h3>
+                <ol>
+                    <li>Copy the URL of the YouTube video you want to download</li>
+                    <li>Click on the "YouTube Downloader" card at the top of this page</li>
+                    <li>Paste the URL in the input field that appears</li>
+                    <li>Select your preferred format (MP4, MP3, etc.) and quality</li>
+                    <li>Click "Download" and wait for the process to complete</li>
+                </ol>
+            </div>
+            
+            <div class="platform-steps twitter-steps" id="twitter-steps">
+                <h3><i class="fab fa-twitter"></i> Twitter Download Instructions</h3>
+                <ol>
+                    <li>Find the tweet containing the video you want to download</li>
+                    <li>Copy the tweet URL from your browser's address bar</li>
+                    <li>Click on the "Twitter Downloader" card at the top of this page</li>
+                    <li>Paste the URL and click "Process"</li>
+                    <li>Choose your preferred quality and click "Download"</li>
+                </ol>
+            </div>
+            
+            <div class="platform-steps instagram-steps" id="instagram-steps">
+                <h3><i class="fab fa-instagram"></i> Instagram Download Instructions</h3>
+                <ol>
+                    <li>Open the Instagram post, reel, or story you want to download</li>
+                    <li>Copy the URL from your browser's address bar</li>
+                    <li>Click on the "Instagram Downloader" card at the top of this page</li>
+                    <li>Paste the URL and click "Continue"</li>
+                    <li>Select the content you want to download and click "Save"</li>
+                </ol>
+            </div>
+            
+            <div class="platform-steps facebook-steps" id="facebook-steps">
+                <h3><i class="fab fa-facebook-f"></i> Facebook Download Instructions</h3>
+                <ol>
+                    <li>Locate the Facebook video you want to download</li>
+                    <li>Copy the video's URL</li>
+                    <li>Click on the "Facebook Downloader" card at the top of this page</li>
+                    <li>Paste the URL and press "Extract"</li>
+                    <li>Select your preferred quality and click "Download Now"</li>
+                </ol>
+            </div>
+        </div>
+
         <footer>
-            &copy; 2025 Video Downloader Hub - The ultimate tool for downloading videos
+            &copy; 2025 Video Downloader Hub - By Amarnath
         </footer>
     </div>
 
@@ -377,8 +656,8 @@
             
             bubblesContainer.appendChild(bubble);
         }
-
-        // Add hover effect to service cards
+    
+        // Handle hover effect and 3D tilt for service cards
         document.querySelectorAll('.service-card').forEach(card => {
             card.addEventListener('mousemove', (e) => {
                 const rect = card.getBoundingClientRect();
@@ -388,16 +667,78 @@
                 const centerX = rect.width / 2;
                 const centerY = rect.height / 2;
                 
-                const angleX = (centerY - y) / 30;
-                const angleY = (x - centerX) / 30;
+                const angleX = (centerY - y) / 20;
+                const angleY = (x - centerX) / 20;
                 
-                card.style.transform = `perspective(1000px) rotateX(${angleX}deg) rotateY(${angleY}deg) translateY(-10px) scale(1.03)`;
+                card.style.transform = `perspective(1000px) rotateX(${angleX}deg) rotateY(${angleY}deg) translateY(-10px)`;
             });
             
             card.addEventListener('mouseleave', () => {
                 card.style.transform = '';
             });
+    
+            // Add click event for service cards
+            card.addEventListener('click', function() {
+                // Determine which service was clicked
+                if (this.classList.contains('youtube-card')) {
+                    window.location.href = '/youtube';
+                } else if (this.classList.contains('twitter-card')) {
+                    window.location.href = '/twitter';
+                } else if (this.classList.contains('instagram-card')) {
+                    window.location.href = '/instagram';
+                } else if (this.classList.contains('facebook-card')) {
+                    window.location.href = '/facebook';
+                }
+            });
         });
+    
+        // Make buttons redirect to respective pages
+        document.querySelectorAll('.service-btn').forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.stopPropagation(); // Prevent the card's click event from firing
+                const card = this.closest('.service-card');
+                
+                if (card.classList.contains('youtube-card')) {
+                    window.location.href = '/youtube';
+                } else if (card.classList.contains('twitter-card')) {
+                    window.location.href = '/twitter';
+                } else if (card.classList.contains('instagram-card')) {
+                    window.location.href = '/instagram';
+                } else if (card.classList.contains('facebook-card')) {
+                    window.location.href = '/facebook';
+                }
+            });
+        });
+    
+        // Platform instructions toggle
+        const platformTriggers = document.querySelectorAll('.platform-trigger');
+        const platformSteps = document.querySelectorAll('.platform-steps');
+        const animations = ['fadeInUp', 'fadeInScale', 'slideInRight', 'bounceIn'];
+        let currentAnimation = 0;
+    
+        platformTriggers.forEach(trigger => {
+            trigger.addEventListener('click', function() {
+                const platform = this.getAttribute('data-platform');
+                const targetSteps = document.getElementById(`${platform}-steps`);
+                
+                // Hide all instruction sections
+                platformSteps.forEach(step => {
+                    step.classList.remove('active');
+                });
+                
+                // Show selected instruction section
+                targetSteps.classList.add('active');
+                
+                // Apply animation
+                targetSteps.style.animationName = animations[currentAnimation];
+                
+                // Cycle through animations
+                currentAnimation = (currentAnimation + 1) % animations.length;
+            });
+        });
+    
+        // Click YouTube by default
+        document.querySelector('.platform-trigger.youtube').click();
     </script>
 </body>
 </html>

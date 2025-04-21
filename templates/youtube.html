@@ -3,19 +3,21 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>YouTube Downloader Pro</title>
+  <title>YouTube Downloader Premium</title>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --primary: #ff0000;
-      --primary-dark: #cc0000;
-      --secondary: #2c3e50;
-      --light: #f8f9fa;
-      --dark: #343a40;
-      --success: #28a745;
-      --danger: #dc3545;
-      --warning: #ffc107;
-      --info: #17a2b8;
+      --primary: #e60023;
+      --primary-dark: #b3001b;
+      --secondary: #1a202c;
+      --light: #ffffff;
+      --dark: #2d3748;
+      --success: #38a169;
+      --danger: #e53e3e;
+      --warning: #f6ad55;
+      --info: #3182ce;
+      --gradient: linear-gradient(135deg, #ff416c 0%, #e60023 100%);
     }
     
     * {
@@ -25,70 +27,90 @@
     }
     
     body {
-      font-family: 'Segoe UI', 'Roboto', sans-serif;
-      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      font-family: 'Inter', 'Segoe UI', 'Roboto', sans-serif;
+      background: linear-gradient(135deg, #edf2f7 0%, #e2e8f0 100%);
       min-height: 100vh;
       color: var(--dark);
       padding: 40px 20px;
+      overflow-x: hidden;
     }
     
     .container {
       width: 90%;
       max-width: 800px;
       margin: 0 auto;
-      background: white;
-      border-radius: 16px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-      padding: 30px;
+      background: var(--light);
+      border-radius: 20px;
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+      padding: 40px;
       position: relative;
       overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .container::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background: var(--gradient);
     }
     
     .header {
       text-align: center;
-      margin-bottom: 30px;
+      margin-bottom: 40px;
     }
     
     .header h1 {
-      font-size: 2.2rem;
+      font-size: 2.5rem;
+      font-weight: 700;
       color: var(--primary);
-      margin-bottom: 10px;
+      margin-bottom: 12px;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 10px;
+      gap: 12px;
+      background: var(--gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
     }
     
     .header p {
       color: var(--secondary);
-      font-size: 1rem;
-      opacity: 0.8;
+      font-size: 1.1rem;
+      opacity: 0.85;
+      font-weight: 400;
     }
     
     .form-group {
-      margin-bottom: 20px;
+      margin-bottom: 25px;
+      position: relative;
     }
     
     .form-control {
       width: 100%;
-      padding: 15px;
-      border: 2px solid #ddd;
-      border-radius: 10px;
+      padding: 16px;
+      border: 2px solid #e2e8f0;
+      border-radius: 12px;
       font-size: 1rem;
       transition: all 0.3s ease;
       outline: none;
+      background: #f7fafc;
     }
     
     .form-control:focus {
       border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(255, 0, 0, 0.2);
+      box-shadow: 0 0 0 4px rgba(230, 0, 35, 0.15);
+      background: var(--light);
     }
     
     .btn {
       width: 100%;
-      padding: 15px;
+      padding: 16px;
       border: none;
-      border-radius: 10px;
+      border-radius: 12px;
       font-size: 1rem;
       font-weight: 600;
       cursor: pointer;
@@ -97,16 +119,33 @@
       justify-content: center;
       align-items: center;
       gap: 10px;
+      position: relative;
+      overflow: hidden;
     }
     
     .btn-primary {
-      background-color: var(--primary);
+      background: var(--gradient);
       color: white;
     }
     
+    .btn-primary::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: 0.5s;
+    }
+    
+    .btn-primary:hover:not(:disabled)::before {
+      left: 100%;
+    }
+    
     .btn-primary:hover:not(:disabled) {
-      background-color: var(--primary-dark);
-      transform: translateY(-2px);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 20px rgba(230, 0, 35, 0.3);
     }
     
     .btn-danger {
@@ -115,8 +154,9 @@
     }
     
     .btn-danger:hover:not(:disabled) {
-      background-color: #bd2130;
-      transform: translateY(-2px);
+      background-color: #c53030;
+      transform: translateY(-3px);
+      box-shadow: 0 8px 20px rgba(229, 62, 62, 0.3);
     }
     
     .btn:disabled {
@@ -126,8 +166,8 @@
     
     .controls {
       display: flex;
-      gap: 15px;
-      margin-top: 20px;
+      gap: 20px;
+      margin-top: 25px;
     }
     
     .controls .btn {
@@ -135,41 +175,40 @@
     }
     
     .output-container {
-      margin-top: 25px;
-      position: relative;
-      border-radius: 10px;
+      margin-top: 30px;
+      border-radius: 12px;
       overflow: hidden;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
     }
     
     .output-header {
-      background-color: var(--secondary);
+      background: var(--secondary);
       color: white;
-      padding: 10px 15px;
+      padding: 12px 20px;
       font-weight: 600;
-      font-size: 0.9rem;
+      font-size: 0.95rem;
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
     
     .output-body {
-      height: 200px;
+      height: 220px;
       overflow-y: auto;
-      background-color: #2d3748;
+      background: #1a202c;
       color: #e2e8f0;
-      padding: 15px;
+      padding: 20px;
       font-family: 'Consolas', 'Monaco', monospace;
       font-size: 0.9rem;
       white-space: pre-wrap;
-      line-height: 1.5;
+      line-height: 1.6;
     }
     
     .progress-container {
       position: relative;
-      width: 120px;
-      height: 120px;
-      margin: 20px auto;
-      transition: all 0.3s ease;
+      width: 140px;
+      height: 140px;
+      margin: 25px auto;
       display: none;
     }
     
@@ -185,14 +224,14 @@
     
     .progress-circle {
       fill: transparent;
-      stroke: #e0e0e0;
-      stroke-width: 8;
+      stroke: #e2e8f0;
+      stroke-width: 10;
     }
     
     .progress-value {
       fill: transparent;
       stroke: var(--primary);
-      stroke-width: 8;
+      stroke-width: 10;
       stroke-linecap: round;
       transition: stroke-dashoffset 0.3s ease;
     }
@@ -202,24 +241,32 @@
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      font-size: 1.5rem;
-      font-weight: bold;
+      font-size: 1.8rem;
+      font-weight: 700;
       color: var(--primary);
+      background: var(--gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
     }
     
     .tabs {
       display: flex;
-      border-bottom: 2px solid #eee;
-      margin-bottom: 20px;
+      border-bottom: 2px solid #e2e8f0;
+      margin-bottom: 25px;
     }
     
     .tab {
-      padding: 10px 20px;
+      padding: 12px 25px;
       font-weight: 600;
       cursor: pointer;
       position: relative;
       transition: all 0.3s ease;
       color: var(--secondary);
+      font-size: 1rem;
+    }
+    
+    .tab:hover {
+      color: var(--primary);
     }
     
     .tab.active {
@@ -232,8 +279,8 @@
       bottom: -2px;
       left: 0;
       width: 100%;
-      height: 2px;
-      background-color: var(--primary);
+      height: 3px;
+      background: var(--gradient);
     }
     
     .tab-content {
@@ -242,14 +289,14 @@
     
     .tab-content.active {
       display: block;
-      animation: fadeIn 0.3s ease;
+      animation: fadeIn 0.4s ease;
     }
     
     .format-options {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: 10px;
-      margin-bottom: 20px;
+      gap: 15px;
+      margin-bottom: 25px;
     }
     
     .format-option {
@@ -269,22 +316,29 @@
       align-items: center;
       justify-content: center;
       text-align: center;
-      padding: 15px;
-      border: 2px solid #ddd;
-      border-radius: 10px;
+      padding: 20px;
+      border: 2px solid #e2e8f0;
+      border-radius: 12px;
       cursor: pointer;
       transition: all 0.3s ease;
       height: 100%;
+      background: #f7fafc;
     }
     
     .format-option input:checked + label {
       border-color: var(--primary);
-      background-color: rgba(255, 0, 0, 0.05);
+      background: linear-gradient(135deg, rgba(255, 65, 108, 0.05) 0%, rgba(230, 0, 35, 0.05) 100%);
+      box-shadow: 0 4px 15px rgba(230, 0, 35, 0.2);
+    }
+    
+    .format-option label:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
     }
     
     .format-option i {
-      font-size: 1.5rem;
-      margin-bottom: 8px;
+      font-size: 1.8rem;
+      margin-bottom: 10px;
       color: var(--secondary);
     }
     
@@ -294,112 +348,128 @@
     
     .format-name {
       font-weight: 600;
-      font-size: 0.9rem;
+      font-size: 0.95rem;
     }
     
     .format-desc {
-      font-size: 0.75rem;
+      font-size: 0.8rem;
       opacity: 0.8;
-      margin-top: 5px;
+      margin-top: 6px;
     }
     
     .quality-selector {
-      margin-top: 20px;
+      margin-top: 25px;
     }
     
     .quality-selector h3 {
-      font-size: 1rem;
-      margin-bottom: 10px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 12px;
       color: var(--secondary);
     }
     
     .quality-options {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
+      gap: 15px;
     }
     
     .quality-options .format-option label {
-      padding: 10px;
+      padding: 12px;
     }
     
     .playlist-options {
-      margin-top: 20px;
+      margin-top: 25px;
     }
     
     .playlist-options h3 {
-      font-size: 1rem;
-      margin-bottom: 10px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 12px;
       color: var(--secondary);
     }
     
     .playlist-range {
       display: flex;
-      gap: 10px;
+      gap: 15px;
       align-items: center;
-      margin-top: 10px;
+      margin-top: 15px;
     }
     
     .playlist-range input {
       flex: 1;
-      padding: 10px;
-      border: 1px solid #ddd;
-      border-radius: 5px;
+      padding: 12px;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      background: #f7fafc;
     }
     
     .checkbox-group {
       display: flex;
-      gap: 5px;
+      gap: 8px;
       align-items: center;
-      margin-top: 10px;
+      margin-top: 15px;
     }
     
     .checkbox-group input {
-      width: 18px;
-      height: 18px;
+      width: 20px;
+      height: 20px;
+      accent-color: var(--primary);
+    }
+    
+    .checkbox-group label {
+      font-size: 0.95rem;
     }
     
     .help-container {
-      margin-top: 40px;
-      padding-top: 20px;
-      border-top: 1px solid #eee;
+      margin-top: 50px;
+      padding-top: 25px;
+      border-top: 1px solid #e2e8f0;
     }
     
     .help-container h2 {
       color: var(--secondary);
-      font-size: 1.5rem;
-      margin-bottom: 15px;
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin-bottom: 20px;
       text-align: center;
     }
     
     .faq-item {
-      margin-bottom: 15px;
-      border: 1px solid #eee;
-      border-radius: 8px;
+      margin-bottom: 20px;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
       overflow: hidden;
+      background: #f7fafc;
     }
     
     .faq-question {
-      padding: 15px;
+      padding: 20px;
       font-weight: 600;
-      background-color: #f8f9fa;
+      background: var(--light);
       cursor: pointer;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      transition: background 0.3s ease;
+    }
+    
+    .faq-question:hover {
+      background: #edf2f7;
     }
     
     .faq-answer {
-      padding: 0 15px;
+      padding: 0 20px;
       max-height: 0;
       overflow: hidden;
-      transition: all 0.3s ease;
-      line-height: 1.6;
+      transition: all 0.4s ease;
+      line-height: 1.7;
+      background: var(--light);
     }
     
     .faq-item.active .faq-answer {
-      padding: 15px;
-      max-height: 500px;
+      padding: 20px;
+      max-height: 600px;
     }
     
     .faq-item.active .faq-toggle i {
@@ -419,12 +489,12 @@
     
     .tooltip .tooltiptext {
       visibility: hidden;
-      width: 200px;
-      background-color: var(--secondary);
+      width: 220px;
+      background: var(--secondary);
       color: #fff;
       text-align: center;
-      border-radius: 6px;
-      padding: 10px;
+      border-radius: 8px;
+      padding: 12px;
       position: absolute;
       z-index: 1;
       bottom: 125%;
@@ -432,7 +502,7 @@
       transform: translateX(-50%);
       opacity: 0;
       transition: opacity 0.3s;
-      font-size: 0.8rem;
+      font-size: 0.85rem;
     }
     
     .tooltip:hover .tooltiptext {
@@ -441,15 +511,9 @@
     }
     
     @keyframes pulse {
-      0% {
-        transform: scale(1);
-      }
-      50% {
-        transform: scale(1.2);
-      }
-      100% {
-        transform: scale(1);
-      }
+      0% { transform: scale(1); }
+      50% { transform: scale(1.25); }
+      100% { transform: scale(1); }
     }
     
     .shake {
@@ -458,8 +522,8 @@
     
     @keyframes shake {
       0%, 100% { transform: translateX(0); }
-      10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
-      20%, 40%, 60%, 80% { transform: translateX(5px); }
+      10%, 30%, 50%, 70%, 90% { transform: translateX(-6px); }
+      20%, 40%, 60%, 80% { transform: translateX(6px); }
     }
     
     .fade-in {
@@ -467,47 +531,52 @@
     }
     
     @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
     }
     
     .features {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 20px;
-      margin: 30px 0;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 25px;
+      margin: 40px 0;
     }
     
     .feature {
-      background-color: #f8f9fa;
-      border-radius: 10px;
-      padding: 20px;
+      background: var(--light);
+      border-radius: 12px;
+      padding: 25px;
       text-align: center;
-      transition: transform 0.3s ease;
+      transition: all 0.3s ease;
+      border: 1px solid #e2e8f0;
     }
     
     .feature:hover {
-      transform: translateY(-5px);
+      transform: translateY(-8px);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
     }
     
     .feature i {
-      font-size: 2rem;
+      font-size: 2.5rem;
       color: var(--primary);
-      margin-bottom: 10px;
+      margin-bottom: 15px;
+      background: var(--gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
     }
     
     .feature h3 {
-      font-size: 1.2rem;
-      margin-bottom: 10px;
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin-bottom: 12px;
       color: var(--secondary);
     }
     
     .feature p {
-      font-size: 0.9rem;
-      color: #666;
+      font-size: 0.95rem;
+      color: #4a5568;
     }
     
-    /* Media queries for responsive design */
     @media (max-width: 768px) {
       .format-options,
       .quality-options {
@@ -522,14 +591,22 @@
       .controls {
         flex-direction: column;
       }
+      
+      .container {
+        padding: 30px 20px;
+      }
+      
+      .header h1 {
+        font-size: 2rem;
+      }
     }
   </style>
 </head>
 <body>
   <div class="container fade-in">
     <div class="header">
-      <h1><i class="fab fa-youtube"></i> YouTube Downloader Pro</h1>
-      <p>Download single videos or playlists in various quality options</p>
+      <h1><i class="fab fa-youtube"></i> YouTube Downloader Premium</h1>
+      <p>Download videos and playlists with professional quality and speed</p>
     </div>
     
     <div class="tabs">
@@ -707,7 +784,7 @@
           </div>
           
           <div class="checkbox-group">
-            <input type="checkbox" id="createPlaylistFolder" checked />
+            <input type="checkbox" id="createPlaylistFolder" />
             <label for="createPlaylistFolder">Create folder for playlist</label>
           </div>
         </div>
@@ -719,9 +796,9 @@
     </form>
     
     <div class="progress-container" id="progressContainer">
-      <svg class="progress-ring" width="120" height="120">
-        <circle class="progress-circle" cx="60" cy="60" r="54"></circle>
-        <circle class="progress-value" cx="60" cy="60" r="54" id="progressValue"></circle>
+      <svg class="progress-ring" width="140" height="140">
+        <circle class="progress-circle" cx="70" cy="70" r="60"></circle>
+        <circle class="progress-value" cx="70" cy="70" r="60" id="progressValue"></circle>
       </svg>
       <div class="progress-text" id="progressText">0%</div>
     </div>
@@ -793,8 +870,9 @@
             <li>Choose your preferred format (Video or Audio)</li>
             <li>Select the desired quality</li>
             <li>Decide if you want to download the entire playlist or a specific range</li>
+            <li>Optionally enable "Create folder for playlist" to organize files</li>
             <li>Click "Start Download"</li>
-            <li>Your files will be saved in a folder named after the playlist</li>
+            <li>Your files will be saved in the "downloads" folder</li>
           </ol>
           <p><strong>Note:</strong> Downloading large playlists may take a long time depending on your internet connection.</p>
         </div>
@@ -820,7 +898,7 @@
           Where are my downloaded files saved? <span class="faq-toggle"><i class="fas fa-chevron-down"></i></span>
         </div>
         <div class="faq-answer">
-          <p>All downloads are saved in the "downloads" folder in the same directory as this application. For playlists, a subfolder will be created with the playlist name.</p>
+          <p>All downloads are saved in the "downloads" folder of your devices. If you enable the "Create folder for playlist" option, playlist files will be saved in a subfolder named after the playlist.</p>
           <p>The file naming format is based on the video title. Special characters in titles will be automatically replaced with safe characters.</p>
         </div>
       </div>
@@ -833,10 +911,9 @@
           <ul>
             <li><strong>Download fails immediately:</strong> Make sure the URL is correct and the video is available in your country.</li>
             <li><strong>Download starts but then stops:</strong> This could be due to network issues or YouTube restrictions. Try again or choose a lower quality.</li>
-            <li><strong>MP3 conversion fails:</strong> Make sure you have ffmpeg installed on your system. The downloader requires ffmpeg for MP3 conversion.</li>
             <li><strong>Playlist download is incomplete:</strong> For very large playlists, some videos might fail to download due to restrictions. Check the logs for details.</li>
           </ul>
-          <p>If you encounter persistent issues, try restarting the application or check if yt-dlp needs to be updated.</p>
+          <p> **If you encounter persistent issues, try restarting the application. **</p>
         </div>
       </div>
     </div>
@@ -849,11 +926,9 @@
     
     tabs.forEach(tab => {
       tab.addEventListener('click', () => {
-        // Remove active class from all tabs and contents
         tabs.forEach(t => t.classList.remove('active'));
         tabContents.forEach(c => c.classList.remove('active'));
         
-        // Add active class to clicked tab and corresponding content
         tab.classList.add('active');
         const contentId = tab.getAttribute('data-tab') + 'Content';
         document.getElementById(contentId).classList.add('active');
@@ -889,10 +964,9 @@
     const statusIndicator = document.getElementById('statusIndicator');
     
     let downloadProcess;
-    let progressInterval;
     
     // Calculate circumference for progress circle
-    const radius = 54;
+    const radius = 60;
     const circumference = 2 * Math.PI * radius;
     progressValue.style.strokeDasharray = `${circumference} ${circumference}`;
     progressValue.style.strokeDashoffset = circumference;
@@ -907,33 +981,23 @@
     // Function to update status indicator
     function updateStatus(status, isError = false) {
       statusIndicator.textContent = status;
-      if (isError) {
-        statusIndicator.style.color = 'var(--danger)';
-      } else {
-        statusIndicator.style.color = 'var(--success)';
-      }
+      statusIndicator.style.color = isError ? 'var(--danger)' : 'var(--success)';
     }
     
     // Function to extract progress from yt-dlp output
     function extractProgress(line) {
       const downloadRegex = /(\d+(\.\d+)?)%/;
       const match = line.match(downloadRegex);
-      if (match) {
-        return parseFloat(match[1]);
-      }
-      return null;
+      return match ? parseFloat(match[1]) : null;
     }
     
     // Function to build download command based on selected options
     function buildDownloadOptions() {
       const url = document.getElementById('url').value;
       const activeTab = document.querySelector('.tab.active').getAttribute('data-tab');
-      let options = {};
-      
-      options.url = url;
+      let options = { url };
       
       if (activeTab === 'video') {
-        // Get format selection for single video
         const formatRadios = document.getElementsByName('format');
         for (const radio of formatRadios) {
           if (radio.checked) {
@@ -942,7 +1006,6 @@
           }
         }
         
-        // Get quality selection for single video if video format is selected
         if (options.format !== 'mp3' && options.format !== 'bestaudio[ext=m4a]') {
           const qualityRadios = document.getElementsByName('video-quality');
           for (const radio of qualityRadios) {
@@ -953,10 +1016,8 @@
           }
         }
       } else if (activeTab === 'playlist') {
-        // Set playlist flag
         options.isPlaylist = true;
         
-        // Get format selection for playlist
         const formatRadios = document.getElementsByName('playlist-format');
         for (const radio of formatRadios) {
           if (radio.checked) {
@@ -965,7 +1026,6 @@
           }
         }
         
-        // Get quality selection for playlist
         const qualityRadios = document.getElementsByName('playlist-quality');
         for (const radio of qualityRadios) {
           if (radio.checked) {
@@ -974,14 +1034,12 @@
           }
         }
         
-        // Check if downloading full playlist or range
         const fullPlaylist = document.getElementById('playlistFullDownload').checked;
         if (!fullPlaylist) {
           options.playlistStart = document.getElementById('playlistStart').value || '1';
           options.playlistEnd = document.getElementById('playlistEnd').value || '';
         }
         
-        // Check if creating folder for playlist
         options.createFolder = document.getElementById('createPlaylistFolder').checked;
       }
       
@@ -995,27 +1053,21 @@
       
       if (!url) {
         document.getElementById('url').classList.add('shake');
-        setTimeout(() => {
-          document.getElementById('url').classList.remove('shake');
-        }, 500);
+        setTimeout(() => document.getElementById('url').classList.remove('shake'), 500);
         return;
       }
       
-      // Get all download options
       const downloadOptions = buildDownloadOptions();
       
-      // Reset UI
       output.textContent = "⏳ Starting download...";
       updateStatus("Initializing");
       progressContainer.classList.add('active');
       updateProgress(0);
       
-      // Disable start button, enable stop button
       startBtn.disabled = true;
       stopBtn.disabled = false;
       
       try {
-        // Make request to server
         downloadProcess = await fetch('/download', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -1033,7 +1085,6 @@
         let progress = 0;
         let downloadStarted = false;
         
-        // Process stream from server
         while (true) {
           const { value, done } = await reader.read();
           if (done) break;
@@ -1042,13 +1093,11 @@
           output.textContent += chunk;
           output.scrollTop = output.scrollHeight;
           
-          // Check if downloading has started
           if (chunk.includes("Downloading") && !downloadStarted) {
             updateStatus("Downloading");
             downloadStarted = true;
           }
           
-          // Try to extract progress information from the output
           const lines = chunk.split('\n');
           for (const line of lines) {
             const extractedProgress = extractProgress(line);
@@ -1057,28 +1106,22 @@
               updateProgress(progress);
             }
             
-            // Check for completion indicators
             if (line.includes("Destination:") || line.includes("has already been downloaded")) {
               updateProgress(100);
             }
             
-            // Check for conversion indicators
             if (line.includes("Converting")) {
               updateStatus("Converting");
             }
             
-            // Check for errors
             if (line.includes("ERROR:")) {
               updateStatus("Failed", true);
             }
           }
         }
         
-        // Download completed
         updateStatus("Completed");
         updateProgress(100);
-        
-        // Add successful download message
         output.textContent += "\n✅ Download completed successfully!\n";
         output.textContent += "📂 Files saved to the 'downloads' folder.";
         
@@ -1087,15 +1130,14 @@
         output.textContent += `\n❌ Download failed: ${error.message}`;
         updateStatus("Failed", true);
       } finally {
-        // Reset UI state
         startBtn.disabled = false;
         stopBtn.disabled = true;
+        progressContainer.classList.remove('active');
       }
     });
     
     stopBtn.addEventListener('click', async () => {
       if (downloadProcess) {
-        // Make request to stop the download
         try {
           const response = await fetch('/stop', {
             method: 'POST',
@@ -1113,15 +1155,14 @@
           output.textContent += "\n❌ Failed to stop download.";
         }
         
-        // Abort the fetch if it's still active
         if (downloadProcess.abort) {
           downloadProcess.abort();
         }
       }
       
-      // Reset UI state
       stopBtn.disabled = true;
       startBtn.disabled = false;
+      progressContainer.classList.remove('active');
     });
     
     // Clean up URL when pasted
@@ -1136,7 +1177,6 @@
     document.getElementById('url').addEventListener('change', (e) => {
       const url = e.target.value;
       if (url.includes('playlist') || url.includes('list=')) {
-        // If it looks like a playlist URL, switch to playlist tab
         tabs.forEach(t => t.classList.remove('active'));
         tabContents.forEach(c => c.classList.remove('active'));
         
@@ -1146,36 +1186,26 @@
       }
     });
     
-    // Add download completion notification
+    // Download completion notification
     function notifyDownloadComplete() {
-      if ('Notification' in window) {
-        if (Notification.permission === 'granted') {
-          new Notification('Download Complete', {
-            body: 'Your YouTube download has finished.',
-            icon: 'https://www.youtube.com/favicon.ico'
-          });
-        } else if (Notification.permission !== 'denied') {
-          Notification.requestPermission().then(permission => {
-            if (permission === 'granted') {
-              new Notification('Download Complete', {
-                body: 'Your YouTube download has finished.',
-                icon: 'https://www.youtube.com/favicon.ico'
-              });
-            }
-          });
-        }
+      if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification('Download Complete', {
+          body: 'Your YouTube download has finished.',
+          icon: 'https://www.youtube.com/favicon.ico'
+        });
+      } else if ('Notification' in window && Notification.permission !== 'denied') {
+        Notification.requestPermission().then(permission => {
+          if (permission === 'granted') {
+            new Notification('Download Complete', {
+              body: 'Your YouTube download has finished.',
+              icon: 'https://www.youtube.com/favicon.ico'
+            });
+          }
+        });
       }
     }
     
-    // Update backend to handle the new options
-    // This requires updating your Flask app's /download endpoint to handle these parameters
-    
-    // Note: You'll need to modify your app.py to support these new options:
-    // - Video quality selection
-    // - Playlist range selection
-    // - Creating folders for playlists
-    
-    // Example Python code changes needed in app.py:
+    // Example backend changes needed in app.py:
     /*
     def generate_command(data):
         url = data.get("url")
@@ -1184,11 +1214,10 @@
         is_playlist = data.get("isPlaylist", False)
         playlist_start = data.get("playlistStart")
         playlist_end = data.get("playlistEnd")
-        create_folder = data.get("createFolder", True)
+        create_folder = data.get("createFolder", False)
         
         cmd = ["yt-dlp"]
         
-        # Format selection
         if fmt == "mp3":
             cmd.extend(["--extract-audio", "--audio-format", "mp3"])
         elif quality:
@@ -1196,7 +1225,6 @@
         else:
             cmd.extend(["-f", fmt])
         
-        # Playlist options
         if is_playlist:
             cmd.append("--yes-playlist")
             if playlist_start:
@@ -1206,15 +1234,11 @@
         else:
             cmd.append("--no-playlist")
         
-        # Output format
-        if is_playlist and create_folder:
-            output_tpl = os.path.join(DOWNLOAD_FOLDER, "%(playlist_title)s/%(title)s.%(ext)s")
-        else:
-            output_tpl = os.path.join(DOWNLOAD_FOLDER, "%(title)s.%(ext)s")
-            
+        output_tpl = os.path.join(DOWNLOAD_FOLDER, "%(playlist_index)s - %(title)s.%(ext)s") if is_playlist and not create_folder else \
+                     os.path.join(DOWNLOAD_FOLDER, "%(playlist_title)s/%(playlist_index)s - %(title)s.%(ext)s") if is_playlist else \
+                     os.path.join(DOWNLOAD_FOLDER, "%(title)s.%(ext)s")
+                     
         cmd.extend(["-o", output_tpl])
-        
-        # Add URL at the end
         cmd.append(url)
         
         return cmd
@@ -1222,7 +1246,6 @@
     @app.route('/download', methods=['POST'])
     def download():
         global current_process
-        
         data = request.get_json()
         url = data.get("url")
         

@@ -74,35 +74,84 @@ def instafacebook():
 # === FILE HANDLING ROUTES ===
 @app.route('/files/<platform>', methods=['GET'])
 def list_files(platform):
-    platform_folder = os.path.join(DOWNLOAD_FOLDER, platform)
     files = []
-    if os.path.exists(platform_folder):
-        for root, _, filenames in os.walk(platform_folder):
-            for filename in filenames:
-                if filename.endswith(('.mp4', '.jpg', '.jpeg', '.png', '.json')):
-                    relative_path = os.path.relpath(os.path.join(root, filename), platform_folder)
-                    files.append(relative_path)
+    for root, _, filenames in os.walk(DOWNLOAD_FOLDER):
+        for filename in filenames:
+            if filename.endswith(('.mp4', '.jpg', '.jpeg', '.png', '.json')):
+                relative_path = os.path.relpath(os.path.join(root, filename), DOWNLOAD_FOLDER)
+                files.append(relative_path)
     return jsonify(files)
 
 @app.route('/file/<platform>/<path:filename>', methods=['GET'])
 def serve_file(platform, filename):
-    file_path = os.path.join(DOWNLOAD_FOLDER, platform, filename)
+    file_path = os.path.join(DOWNLOAD_FOLDER, filename)
     if os.path.exists(file_path):
         return send_file(file_path, as_attachment=True)
     return jsonify({"error": "File not found"}), 404
+
+# === COOKIES UPLOAD ROUTE ===
+@app.route('/upload-cookies', methods=['POST'])
+def upload_cookies():
+    if 'cookies' not in request.files:
+        logger.error("No cookies file provided in upload request")
+        return Response("❌ Error: No cookies file provided\n", status=400, mimetype='text/plain')
+    
+    cookies_file = request.files['cookies']
+    if cookies_file.filename == '':
+        logger.error("No file selected for cookies upload")
+        return Response("❌ Error: No file selected\n", status=400, mimetype='text/plain')
+    
+    # Save the cookies file
+    cookies_path = os.path.join(os.getcwd(), "cookies.txt")
+    cookies_file.save(cookies_path)
+    logger.info(f"Cookies file saved to: {cookies_path}")
+    
+    return Response("✅ Cookies file uploaded successfully\n", mimetype='text/plain')
 
 # === COMMAND GENERATOR ===
 def generate_command(data):
     url = data.get("url")
     fmt = data.get("format", "best")
-    quality = "bestvideo+bestaudio/best" if data.get("highestQuality", False) or data.get("highQuality", False) else "best"
-    create_folder = True
+    quality = data.get("quality", "bestvideo+bestaudio/best")
+    is_playlist = data.get("isPlaylist", False)
+    playlist_start = data.get("playlistStart")
+    playlist_end = data.get("playlistEnd")
     platform = data.get("platform", "youtube")
 
-    cmd = ["yt-dlp", "--no-warnings", "--progress"]
+    cmd = ["yt-dlp", "--no-warnings", "--progress", "--ignore-errors"]
+
+    # Add cookies file for YouTube if it exists
+    if platform == "youtube":
+        cookies_file = "cookies.txt"
+        if os.path.exists(cookies_file):
+            cmd.extend(["--cookies", cookies_file])
+            logger.info("Using cookies file for YouTube authentication")
 
     # Format and quality
-    if platform == "twitter":
+    if platform == "youtube":
+        if fmt == "mp3":
+            cmd.extend(["--extract-audio", "--audio-format", "mp3"])
+        elif fmt == "bestaudio[ext=m4a]":
+            cmd.extend(["-f", "bestaudio[ext=m4a]"])
+        elif quality and quality != "best":
+            cmd.extend(["-f", quality])
+        else:
+            cmd.extend(["-f", fmt])
+        
+        # Playlist options
+        if is_playlist:
+            cmd.append("--yes-playlist")
+            if playlist_start:
+                cmd.extend(["--playlist-start", playlist_start])
+            if playlist_end:
+                cmd.extend(["--playlist-end", playlist_end])
+        else:
+            cmd.append("--no-playlist")
+        
+        # Output template
+        output_tpl = os.path.join(DOWNLOAD_FOLDER, "%(title)s.%(ext)s")
+    
+    elif platform == "twitter":
         if fmt == "video-hd":
             cmd.extend(["-f", "bestvideo[height>=720]+bestaudio/best"])
         elif fmt == "video-sd":
@@ -113,15 +162,18 @@ def generate_command(data):
             cmd.extend(["-f", "bestimage"])
         else:
             cmd.extend(["-f", quality, "--merge-output-format", "mp4"])
-    elif fmt in ["video", "post", "reel", "story"]:
-        cmd.extend(["-f", quality, "--merge-output-format", "mp4"])
-    elif fmt == "photo":
-        cmd.extend(["-f", "bestimage"])
-    elif fmt == "profile" or fmt == "page":
-        cmd.extend(["-f", quality, "--merge-output-format", "mp4"])
-
-    # Platform-specific tweaks
-    if platform == "instagram":
+        
+        # Output template
+        output_tpl = os.path.join(DOWNLOAD_FOLDER, "%(title)s.%(ext)s")
+    
+    elif platform == "instagram":
+        if fmt in ["video", "post", "reel", "story"]:
+            cmd.extend(["-f", quality, "--merge-output-format", "mp4"])
+        elif fmt == "photo":
+            cmd.extend(["-f", "bestimage"])
+        elif fmt == "profile":
+            cmd.extend(["-f", quality, "--merge-output-format", "mp4"])
+        
         if fmt == "story":
             cmd.extend(["--match-filter", "is_story"])
         elif fmt == "post":
@@ -132,7 +184,10 @@ def generate_command(data):
             cmd.extend(["--write-info-json", "--write-description"])
         if data.get("isProfile", False):
             cmd.extend(["--playlist-end", str(data.get("contentCount", 12))])
-
+        
+        # Output template
+        output_tpl = os.path.join(DOWNLOAD_FOLDER, "%(title)s.%(ext)s")
+    
     elif platform == "facebook":
         if fmt == "video":
             cmd.extend(["-f", quality, "--merge-output-format", "mp4"])
@@ -142,24 +197,8 @@ def generate_command(data):
             cmd.extend(["--write-info-json", "--write-description"])
         if data.get("isPage", False):
             cmd.extend(["--playlist-end", str(data.get("videoCount", 10))])
-
-    # Output templates
-    if platform == "twitter":
-        if data.get("isUser", False) and create_folder:
-            output_tpl = os.path.join(DOWNLOAD_FOLDER, "twitter/%(uploader)s/%(title)s.%(ext)s")
-        else:
-            output_tpl = os.path.join(DOWNLOAD_FOLDER, "twitter/%(title)s.%(ext)s")
-    elif platform == "instagram":
-        if data.get("isProfile", False) and create_folder:
-            output_tpl = os.path.join(DOWNLOAD_FOLDER, "instagram/%(uploader)s/%(title)s.%(ext)s")
-        else:
-            output_tpl = os.path.join(DOWNLOAD_FOLDER, "instagram/%(title)s.%(ext)s")
-    elif platform == "facebook":
-        if data.get("isPage", False) and create_folder:
-            output_tpl = os.path.join(DOWNLOAD_FOLDER, "facebook/%(uploader)s/%(title)s.%(ext)s")
-        else:
-            output_tpl = os.path.join(DOWNLOAD_FOLDER, "facebook/%(title)s.%(ext)s")
-    else:
+        
+        # Output template
         output_tpl = os.path.join(DOWNLOAD_FOLDER, "%(title)s.%(ext)s")
 
     cmd.extend(["-o", output_tpl])
@@ -200,6 +239,8 @@ def download():
                     if match:
                         percentage = float(match.group(1))
                         yield f"Progress: {int(percentage)}%\n"
+                if "Sign in to confirm" in line:
+                    yield "❌ Error: YouTube requires authentication. Please upload a valid cookies file.\n"
                 yield line
 
             current_process.stdout.close()
@@ -296,10 +337,16 @@ def download_instafacebook():
 def stop_download():
     global current_process
     if current_process:
-        current_process.send_signal(signal.SIGINT)
-        current_process = None
-        return jsonify({"status": "stopped"}), 200
+        try:
+            current_process.send_signal(signal.SIGINT)
+            current_process = None
+            logger.info("Download stopped successfully")
+            return jsonify({"status": "stopped"}), 200
+        except Exception as e:
+            logger.error(f"Error stopping download: {str(e)}")
+            return jsonify({"error": str(e)}), 500
     else:
+        logger.warning("No download in progress to stop")
         return jsonify({"error": "No download in progress"}), 400
 
 @app.route('/download/abort', methods=['POST'])
