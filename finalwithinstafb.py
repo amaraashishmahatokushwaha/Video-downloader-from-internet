@@ -6,6 +6,8 @@ import re
 import platform
 import glob
 import logging
+import json
+import shutil
 
 app = Flask(__name__)
 
@@ -79,7 +81,7 @@ def list_files(platform):
     if os.path.exists(platform_folder):
         for root, _, filenames in os.walk(platform_folder):
             for filename in filenames:
-                if filename.endswith(('.mp4', '.jpg', '.jpeg', '.png', '.json')):
+                if filename.endswith(('.mp4', '.jpg', '.jpeg', '.png', '.json', '.gif')):
                     relative_path = os.path.relpath(os.path.join(root, filename), platform_folder)
                     files.append(relative_path)
     return jsonify(files)
@@ -91,24 +93,21 @@ def serve_file(platform, filename):
         return send_file(file_path, as_attachment=True)
     return jsonify({"error": "File not found"}), 404
 
-# === COOKIES UPLOAD ROUTE ===
-@app.route('/upload-cookies', methods=['POST'])
-def upload_cookies():
-    if 'cookies' not in request.files:
-        logger.error("No cookies file provided in upload request")
-        return Response("❌ Error: No cookies file provided\n", status=400, mimetype='text/plain')
-    
-    cookies_file = request.files['cookies']
-    if cookies_file.filename == '':
-        logger.error("No file selected for cookies upload")
-        return Response("❌ Error: No file selected\n", status=400, mimetype='text/plain')
-    
-    # Save the cookies file
-    cookies_path = os.path.join(os.getcwd(), "cookies.txt")
-    cookies_file.save(cookies_path)
-    logger.info(f"Cookies file saved to: {cookies_path}")
-    
-    return Response("✅ Cookies file uploaded successfully\n", mimetype='text/plain')
+# === CLEANUP ROUTE ===
+@app.route('/cleanup', methods=['POST'])
+def cleanup():
+    try:
+        platform = request.json.get('platform', 'twitter')
+        folder = os.path.join(DOWNLOAD_FOLDER, platform)
+        if os.path.exists(folder):
+            shutil.rmtree(folder)
+            os.makedirs(folder)
+            logger.info(f"Cleaned up folder: {folder}")
+            return jsonify({"status": "cleaned"}), 200
+        return jsonify({"error": "Folder not found"}), 404
+    except Exception as e:
+        logger.error(f"Error cleaning up: {str(e)}")
+        return jsonify({"error": str(e)}), 500
 
 # === COMMAND GENERATOR ===
 def generate_command(data):
@@ -123,17 +122,19 @@ def generate_command(data):
 
     cmd = ["yt-dlp", "--no-warnings", "--progress", "--ignore-errors"]
 
-    # Add cookies file for YouTube if it exists
+    # Add cookies from browser for YouTube
     if platform == "youtube":
-        cookies_file = "cookies.txt"
-        if os.path.exists(cookies_file):
-            cmd.extend(["--cookies", cookies_file])
-            logger.info("Using cookies file for YouTube authentication")
+        cmd.extend(["--cookies-from-browser", "chrome"])  # Change to "firefox" if preferred
+        logger.info("Using cookies from Chrome browser for YouTube authentication")
+
+    # Add User-Agent if provided
+    if data.get("userAgent"):
+        cmd.extend(["--user-agent", data["userAgent"]])
 
     # Format and quality
     if platform == "youtube":
         if fmt == "mp3":
-            cmd.extend(["--extract-audio", "--audio-format", "mp3"])
+            cmd.extend(["--extract-audio", "--audio-format", "mp3", "--postprocessor-args", "ffmpeg:-strict -2"])
         elif fmt == "bestaudio[ext=m4a]":
             cmd.extend(["-f", "bestaudio[ext=m4a]"])
         elif quality and quality != "best":
@@ -144,6 +145,9 @@ def generate_command(data):
         # Playlist options
         if is_playlist:
             cmd.append("--yes-playlist")
+            if data.get("useDownloadArchive"):
+                archive_path = os.path.join(DOWNLOAD_FOLDER, "youtube/archive.txt")
+                cmd.extend(["--download-archive", archive_path])
             if playlist_start:
                 cmd.extend(["--playlist-start", playlist_start])
             if playlist_end:
@@ -151,17 +155,17 @@ def generate_command(data):
         else:
             cmd.append("--no-playlist")
         
-        # Output template
+        # Output template with shortened names
         if is_playlist and create_folder:
-            output_tpl = os.path.join(DOWNLOAD_FOLDER, "youtube/%(playlist_title)s/%(title)s.%(ext)s")
+            output_tpl = os.path.join(DOWNLOAD_FOLDER, "youtube/%(playlist_title).100B/%(title).200B.%(ext)s")
         else:
-            output_tpl = os.path.join(DOWNLOAD_FOLDER, "youtube/%(title)s.%(ext)s")
+            output_tpl = os.path.join(DOWNLOAD_FOLDER, "youtube/%(title).200B.%(ext)s")
     
     elif platform == "twitter":
         if fmt == "video-hd":
             cmd.extend(["-f", "bestvideo[height>=720]+bestaudio/best"])
         elif fmt == "video-sd":
-            cmd.extend(["-f", "bestvideo[height<=480]+bestaudio/best"])
+            cmd.extend(["-f", "bestaudio[ext=m4a]"])
         elif fmt == "gif":
             cmd.extend(["--recode-video", "gif"])
         elif fmt == "image":
@@ -171,9 +175,9 @@ def generate_command(data):
         
         # Output template
         if data.get("isUser", False) and create_folder:
-            output_tpl = os.path.join(DOWNLOAD_FOLDER, "twitter/%(uploader)s/%(title)s.%(ext)s")
+            output_tpl = os.path.join(DOWNLOAD_FOLDER, "twitter/%(uploader).100B/%(title).200B.%(ext)s")
         else:
-            output_tpl = os.path.join(DOWNLOAD_FOLDER, "twitter/%(title)s.%(ext)s")
+            output_tpl = os.path.join(DOWNLOAD_FOLDER, "twitter/%(title).200B.%(ext)s")
     
     elif platform == "instagram":
         if fmt in ["video", "post", "reel", "story"]:
@@ -196,9 +200,9 @@ def generate_command(data):
         
         # Output template
         if data.get("isProfile", False) and create_folder:
-            output_tpl = os.path.join(DOWNLOAD_FOLDER, "instagram/%(uploader)s/%(title)s.%(ext)s")
+            output_tpl = os.path.join(DOWNLOAD_FOLDER, "instagram/%(uploader).100B/%(title).200B.%(ext)s")
         else:
-            output_tpl = os.path.join(DOWNLOAD_FOLDER, "instagram/%(title)s.%(ext)s")
+            output_tpl = os.path.join(DOWNLOAD_FOLDER, "instagram/%(title).200B.%(ext)s")
     
     elif platform == "facebook":
         if fmt == "video":
@@ -212,9 +216,9 @@ def generate_command(data):
         
         # Output template
         if data.get("isPage", False) and create_folder:
-            output_tpl = os.path.join(DOWNLOAD_FOLDER, "facebook/%(uploader)s/%(title)s.%(ext)s")
+            output_tpl = os.path.join(DOWNLOAD_FOLDER, "facebook/%(uploader).100B/%(title).200B.%(ext)s")
         else:
-            output_tpl = os.path.join(DOWNLOAD_FOLDER, "facebook/%(title)s.%(ext)s")
+            output_tpl = os.path.join(DOWNLOAD_FOLDER, "facebook/%(title).200B.%(ext)s")
 
     cmd.extend(["-o", output_tpl])
     cmd.append(url)
@@ -247,6 +251,7 @@ def download():
         yield "⏳ Starting download...\n"
 
         try:
+            output_file = None
             current_process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
             for line in iter(current_process.stdout.readline, ''):
                 if '[download]' in line and '%' in line:
@@ -255,13 +260,22 @@ def download():
                         percentage = float(match.group(1))
                         yield f"Progress: {int(percentage)}%\n"
                 if "Sign in to confirm" in line:
-                    yield "❌ Error: YouTube requires authentication. Please upload a valid cookies file.\n"
+                    yield "❌ Error: Authentication required. Please log in to YouTube in Chrome and ensure cookies are accessible.\n"
+                if "Destination:" in line:
+                    match = re.search(r'Destination: (.+)', line)
+                    if match:
+                        output_file = match.group(1).strip()
                 yield line
 
             current_process.stdout.close()
             return_code = current_process.wait()
             if return_code == 0:
-                yield "✨ Download completed successfully!\n"
+                if output_file and os.path.exists(output_file):
+                    relative_path = os.path.relpath(output_file, DOWNLOAD_FOLDER)
+                    yield f"✨ Download completed successfully!\n"
+                    yield f"📁 File saved to: {relative_path}\n"
+                else:
+                    yield "❌ Error: Output file not found\n"
             else:
                 yield f"❌ Download failed with return code {return_code}. Please check the error messages above.\n"
         except Exception as e:
@@ -397,5 +411,5 @@ def detect_platform():
 
 # === RUN APP ===
 if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 5000))
+    port = int(os.environ.get("PORT", 5001))  # Default to 5001 to avoid ControlCenter
     app.run(host="0.0.0.0", port=port, debug=True)

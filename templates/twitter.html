@@ -485,7 +485,7 @@
     let downloadProcess;
     
     const radius = 44;
-    const circumference = 2 * Math.PI * radius;
+    const circumference = 2 * Math.Pi * radius;
     progressValue.style.strokeDasharray = `${circumference} ${circumference}`;
     progressValue.style.strokeDashoffset = circumference;
     
@@ -521,9 +521,9 @@
     
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      
+
       const url = document.getElementById('url').value;
-      
+
       if (!url) {
         document.getElementById('url').classList.add('shake');
         setTimeout(() => {
@@ -531,76 +531,115 @@
         }, 500);
         return;
       }
-      
+
       const downloadOptions = buildDownloadOptions();
-      
+
       output.textContent = "⏳ Starting download...";
       updateStatus("Initializing");
       progressContainer.classList.add('active');
       updateProgress(0);
-      
+
       startBtn.disabled = true;
       stopBtn.disabled = false;
-      
+
       try {
         downloadProcess = await fetch('/twitter', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(downloadOptions),
         });
-        
+
         if (!downloadProcess.ok) {
           throw new Error(`Server error: ${downloadProcess.status}`);
         }
-        
+
         const reader = downloadProcess.body.getReader();
         const decoder = new TextDecoder();
-        
+
         output.textContent = "";
         let progress = 0;
         let downloadStarted = false;
-        
+        let filePath = null;
+
         while (true) {
           const { value, done } = await reader.read();
           if (done) break;
-          
+
           const chunk = decoder.decode(value, { stream: true });
-          
+
           output.textContent += chunk;
           output.scrollTop = output.scrollHeight;
-          
+
+          // Extract progress
           const progressMatch = chunk.match(/Progress: (\d+)%/);
           if (progressMatch) {
             progress = parseInt(progressMatch[1]);
             updateProgress(progress);
-            
+
             if (!downloadStarted && progress > 0) {
               downloadStarted = true;
               updateStatus("Downloading");
             }
           }
-          
+
+          // Extract file path
+          const filePathMatch = chunk.match(/File saved to: (.+)/);
+          if (filePathMatch) {
+            filePath = filePathMatch[1].trim();
+          }
+
           if (chunk.includes("Download completed")) {
             updateStatus("Completed");
             updateProgress(100);
           }
-          
+
           if (chunk.includes("Error:")) {
             updateStatus("Failed", true);
           }
         }
-        
+
         startBtn.disabled = false;
         stopBtn.disabled = true;
-        
-        if (output.textContent.includes("Download completed")) {
+
+        if (output.textContent.includes("Download completed") && filePath) {
           const successMsg = document.createElement('div');
-          successMsg.innerHTML = '<i class="fas fa-check-circle success-icon"></i> Download completed successfully!';
+          successMsg.innerHTML = `
+            <i class="fas fa-check-circle success-icon"></i> Download completed successfully!
+            <br><a href="/file/twitter/${encodeURIComponent(filePath)}" download>Click here to download manually</a>
+          `;
           successMsg.style.textAlign = 'center';
           successMsg.style.padding = '15px';
           output.appendChild(successMsg);
+
+          // Fetch the file and trigger download
+          try {
+            const response = await fetch(`/file/twitter/${encodeURIComponent(filePath)}`);
+            if (!response.ok) {
+              throw new Error('Failed to fetch the downloaded file');
+            }
+
+            const blob = await response.blob();
+            const fileName = filePath.split('/').pop(); // Extract filename from path
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+
+            output.textContent += `\n📥 File downloaded to your local Downloads folder as "${fileName}"`;
+          } catch (err) {
+            output.textContent += `\n❌ Error fetching file: ${err.message}`;
+            updateStatus("Error", true);
+          }
+        } else if (!filePath) {
+          output.textContent += `\n❌ Error: File path not received from server`;
+          updateStatus("Error", true);
         }
-        
+
       } catch (error) {
         output.textContent += `\n❌ Error: ${error.message}`;
         updateStatus("Error", true);
@@ -667,7 +706,7 @@
         "✅ Found video content",
         "📊 Analyzing available formats...",
         "🎬 Selected highest quality",
-        "⬇️ Starting download...",
+        "⬜ Starting download...",
         "Progress: 10%",
         "Progress: 25%",
         "Progress: 42%",
@@ -677,7 +716,7 @@
         "Progress: 98%",
         "✅ Download completed",
         "💾 Saving to disk...",
-        "📁 File saved to: Downloads/tweet_1234567890.mp4",
+        "📁 File saved to: twitter/tweet_1234567890.mp4",
         "✨ Download completed successfully!"
       ];
       
@@ -699,7 +738,10 @@
             updateProgress(100);
             
             const successMsg = document.createElement('div');
-            successMsg.innerHTML = '<i class="fas fa-check-circle success-icon"></i> Download completed successfully!';
+            successMsg.innerHTML = `
+              <i class="fas fa-check-circle success-icon"></i> Download completed successfully!
+              <br><a href="#" onclick="alert('Demo mode: Manual download not available')">Click here to download manually</a>
+            `;
             successMsg.style.textAlign = 'center';
             successMsg.style.padding = '15px';
             setTimeout(() => {

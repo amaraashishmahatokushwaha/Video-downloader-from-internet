@@ -510,7 +510,42 @@
       opacity: 1;
     }
     
-    @keyframes pulse {
+    .cookies-upload {
+      margin-bottom: 25px;
+      padding: 20px;
+      border: 2px dashed #e2e8f0;
+      border-radius: 12px;
+      text-align: center;
+      background: #f7fafc;
+    }
+    
+    .cookies-upload.error {
+      border-color: var(--danger);
+      background: rgba(229, 62, 62, 0.05);
+    }
+    
+    .cookies-upload.success {
+      border-color: var(--success);
+      background: rgba(56, 161, 105, 0.05);
+    }
+    
+    .cookies-upload input[type="file"] {
+      display: none;
+    }
+    
+    .cookies-upload label {
+      cursor: pointer;
+      color: var(--primary);
+      font-weight: 600;
+    }
+    
+    .cookies-upload p {
+      margin-top: 10px;
+      font-size: 0.9rem;
+      color: #4a5568;
+    }
+    
+    @keyframes pulse scalp {
       0% { transform: scale(1); }
       50% { transform: scale(1.25); }
       100% { transform: scale(1); }
@@ -559,7 +594,7 @@
     .feature i {
       font-size: 2.5rem;
       color: var(--primary);
-      margin-bottom: 15px;
+      margin-bottom: 8px;
       background: var(--gradient);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
@@ -842,10 +877,11 @@
       
       <div class="faq-item">
         <div class="faq-question">
-          How do I download a single YouTube video? <span class="faq-toggle"><i class="fas fa-chevron-down"></i></span>
+          How do I download a single YouTube video? <span class="osa-toggle"><i class="fas fa-chevron-down"></i></span>
         </div>
         <div class="faq-answer">
           <ol>
+            <li>Upload a valid YouTube cookies file (required for age-restricted or private videos)</li>
             <li>Copy the URL of the YouTube video you want to download</li>
             <li>Make sure the "Single Video" tab is selected</li>
             <li>Paste the URL in the input field</li>
@@ -864,6 +900,7 @@
         </div>
         <div class="faq-answer">
           <ol>
+            <li>Upload a valid YouTube cookies file (required for age-restricted or private videos)</li>
             <li>Copy the URL of the YouTube playlist</li>
             <li>Click on the "Playlist" tab</li>
             <li>Paste the URL in the input field</li>
@@ -875,6 +912,22 @@
             <li>Your files will be saved in the "downloads" folder</li>
           </ol>
           <p><strong>Note:</strong> Downloading large playlists may take a long time depending on your internet connection.</p>
+        </div>
+      </div>
+      
+      <div class="faq-item">
+        <div class="faq-question">
+          How do I get a YouTube cookies file? <span class="faq-toggle"><i class="fas fa-chevron-down"></i></span>
+        </div>
+        <div class="faq-answer">
+          <p>To download age-restricted or private videos, you need to provide a cookies file from your YouTube account:</p>
+          <ol>
+            <li>Use a browser extension like "Get cookies.txt" for Chrome or Firefox</li>
+            <li>Log in to YouTube in your browser</li>
+            <li>Export the cookies as a .txt file using the extension</li>
+            <li>Upload the cookies file using the "Upload YouTube Cookies" section above</li>
+          </ol>
+          <p>More details: <a href="https://github.com/yt-dlp/yt-dlp/wiki/Extractors#exporting-youtube-cookies" target="_blank">Exporting YouTube Cookies</a></p>
         </div>
       </div>
       
@@ -898,7 +951,7 @@
           Where are my downloaded files saved? <span class="faq-toggle"><i class="fas fa-chevron-down"></i></span>
         </div>
         <div class="faq-answer">
-          <p>All downloads are saved in the "downloads" folder of your devices. If you enable the "Create folder for playlist" option, playlist files will be saved in a subfolder named after the playlist.</p>
+          <p>All downloads are saved in the "downloads" folder of your device. If you enable the "Create folder for playlist" option, playlist files will be saved in a subfolder named after the playlist.</p>
           <p>The file naming format is based on the video title. Special characters in titles will be automatically replaced with safe characters.</p>
         </div>
       </div>
@@ -909,11 +962,12 @@
         </div>
         <div class="faq-answer">
           <ul>
+            <li><strong>Download fails with authentication error:</strong> Ensure you have uploaded a valid cookies file. Follow the guide to export cookies correctly.</li>
             <li><strong>Download fails immediately:</strong> Make sure the URL is correct and the video is available in your country.</li>
             <li><strong>Download starts but then stops:</strong> This could be due to network issues or YouTube restrictions. Try again or choose a lower quality.</li>
             <li><strong>Playlist download is incomplete:</strong> For very large playlists, some videos might fail to download due to restrictions. Check the logs for details.</li>
           </ul>
-          <p> **If you encounter persistent issues, try restarting the application. **</p>
+          <p><strong>If you encounter persistent issues, try restarting the application.</strong></p>
         </div>
       </div>
     </div>
@@ -962,6 +1016,7 @@
     const progressValue = document.getElementById('progressValue');
     const progressText = document.getElementById('progressText');
     const statusIndicator = document.getElementById('statusIndicator');
+    const cookiesUpload = document.getElementById('cookiesUpload');
     
     let downloadProcess;
     
@@ -995,7 +1050,7 @@
     function buildDownloadOptions() {
       const url = document.getElementById('url').value;
       const activeTab = document.querySelector('.tab.active').getAttribute('data-tab');
-      let options = { url };
+      let options = { url, platform: 'youtube' };
       
       if (activeTab === 'video') {
         const formatRadios = document.getElementsByName('format');
@@ -1075,7 +1130,8 @@
         });
         
         if (!downloadProcess.ok) {
-          throw new Error(`Server error: ${downloadProcess.status}`);
+          const errorText = await downloadProcess.text();
+          throw new Error(errorText || `Server error: ${downloadProcess.status}`);
         }
         
         const reader = downloadProcess.body.getReader();
@@ -1114,7 +1170,7 @@
               updateStatus("Converting");
             }
             
-            if (line.includes("ERROR:")) {
+            if (line.includes("ERROR:") || line.includes("Please upload a valid cookies file")) {
               updateStatus("Failed", true);
             }
           }
@@ -1124,6 +1180,7 @@
         updateProgress(100);
         output.textContent += "\n✅ Download completed successfully!\n";
         output.textContent += "📂 Files saved to the 'downloads' folder.";
+        notifyDownloadComplete();
         
       } catch (error) {
         console.error("Download error:", error);
@@ -1133,6 +1190,7 @@
         startBtn.disabled = false;
         stopBtn.disabled = true;
         progressContainer.classList.remove('active');
+        downloadProcess = null;
       }
     });
     
@@ -1155,9 +1213,7 @@
           output.textContent += "\n❌ Failed to stop download.";
         }
         
-        if (downloadProcess.abort) {
-          downloadProcess.abort();
-        }
+        downloadProcess = null;
       }
       
       stopBtn.disabled = true;
@@ -1204,65 +1260,6 @@
         });
       }
     }
-    
-    // Example backend changes needed in app.py:
-    /*
-    def generate_command(data):
-        url = data.get("url")
-        fmt = data.get("format", "best")
-        quality = data.get("quality")
-        is_playlist = data.get("isPlaylist", False)
-        playlist_start = data.get("playlistStart")
-        playlist_end = data.get("playlistEnd")
-        create_folder = data.get("createFolder", False)
-        
-        cmd = ["yt-dlp"]
-        
-        if fmt == "mp3":
-            cmd.extend(["--extract-audio", "--audio-format", "mp3"])
-        elif quality:
-            cmd.extend(["-f", quality])
-        else:
-            cmd.extend(["-f", fmt])
-        
-        if is_playlist:
-            cmd.append("--yes-playlist")
-            if playlist_start:
-                cmd.extend(["--playlist-start", playlist_start])
-            if playlist_end:
-                cmd.extend(["--playlist-end", playlist_end])
-        else:
-            cmd.append("--no-playlist")
-        
-        output_tpl = os.path.join(DOWNLOAD_FOLDER, "%(playlist_index)s - %(title)s.%(ext)s") if is_playlist and not create_folder else \
-                     os.path.join(DOWNLOAD_FOLDER, "%(playlist_title)s/%(playlist_index)s - %(title)s.%(ext)s") if is_playlist else \
-                     os.path.join(DOWNLOAD_FOLDER, "%(title)s.%(ext)s")
-                     
-        cmd.extend(["-o", output_tpl])
-        cmd.append(url)
-        
-        return cmd
-    
-    @app.route('/download', methods=['POST'])
-    def download():
-        global current_process
-        data = request.get_json()
-        url = data.get("url")
-        
-        if not url:
-            return Response("❌ Error: No URL provided\n", status=400, mimetype='text/plain')
-        
-        cmd = generate_command(data)
-        
-        def run_command():
-            global current_process
-            current_process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
-            for line in iter(current_process.stdout.readline, ''):
-                yield line
-            current_process.stdout.close()
-        
-        return Response(run_command(), mimetype='text/plain')
-    */
   </script>
 </body>
 </html>
