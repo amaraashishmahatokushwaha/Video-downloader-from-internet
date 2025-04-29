@@ -46,7 +46,7 @@
       position: relative;
       overflow: hidden;
       border: 1px solid rgba(255, 255, 255, 0.1);
-      min-height: 600px; /* Added to prevent layout shifts */
+      min-height: 600px;
     }
     
     .container::before {
@@ -210,7 +210,7 @@
       width: 140px;
       height: 140px;
       margin: 25px auto;
-      visibility: hidden; /* Changed from display: none to prevent layout shifts */
+      visibility: hidden;
       opacity: 0;
       transition: opacity 0.3s ease;
     }
@@ -931,12 +931,13 @@
         </div>
         <div class="faq-answer">
           <ul>
-            <li><strong>Download fails with authentication error:</strong> The video may be age-restricted or private. This application can only download public videos. Try a different video or run the application locally where you are logged into YouTube.</li>
+            <li><strong>Download fails with authentication error:</strong> The video may be age-restricted or private. This application can only download public videos. Try a different video.</li>
             <li><strong>Download fails immediately:</strong> Make sure the URL is correct and the video is available in your country.</li>
             <li><strong>Download starts but then stops:</strong> This could be due to network issues or YouTube restrictions. Try again or choose a lower quality.</li>
             <li><strong>Playlist download is incomplete:</strong> For very large playlists, some videos might fail to download due to restrictions. Check the logs for details.</li>
+            <li><strong>Start Download button doesn't work:</strong> Check your browser's Console (F12 > Console) for errors and ensure the backend server is running.</li>
           </ul>
-          <p><strong>If you encounter persistent issues, try restarting the application.</strong></p>
+          <p><strong>If you encounter persistent issues, try restarting the application or contact support.</strong></p>
         </div>
       </div>
     </div>
@@ -1138,8 +1139,12 @@
               updateStatus("Converting");
             }
             
-            if (line.includes("ERROR:") || line.includes("Sign in to confirm your age") || line.includes("Private video") || line.includes("Login required")) {
-              throw new Error("This video appears to be age-restricted, private, or requires login. This application can only download public videos. Please try a different video or refer to the FAQ for more options.");
+            if (line.includes("Sign in to confirm") || line.includes("Private video") || line.includes("Login required")) {
+              throw new Error("This video requires authentication (e.g., age-restricted or private). Please try a different video or refer to the FAQ.");
+            }
+            
+            if (line.includes("ERROR:") || line.includes("could not find")) {
+              throw new Error("An error occurred during the download. This may be due to an invalid URL or server issue. Please try a different video or contact support.");
             }
           }
         }

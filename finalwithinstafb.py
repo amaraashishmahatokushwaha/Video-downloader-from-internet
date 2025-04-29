@@ -123,11 +123,6 @@ def generate_command(data):
 
     cmd = ["yt-dlp", "--no-warnings", "--progress", "--ignore-errors"]
 
-    # Add cookies from browser for YouTube
-    if platform == "youtube":
-        cmd.extend(["--cookies-from-browser", "chrome"])  # Change to "firefox" if preferred
-        logger.info("Using cookies from Chrome browser for YouTube authentication")
-
     # Add User-Agent if provided
     if data.get("userAgent"):
         cmd.extend(["--user-agent", data["userAgent"]])
@@ -261,7 +256,7 @@ def download():
                         percentage = float(match.group(1))
                         yield f"Progress: {int(percentage)}%\n"
                 if "Sign in to confirm" in line:
-                    yield "❌ Error: Authentication required. Please log in to YouTube in Chrome and ensure cookies are accessible.\n"
+                    yield "❌ Error: This video requires authentication (e.g., age-restricted or private). Please try a different video or refer to the FAQ.\n"
                 # Capture initial destination (fragment files)
                 if "Destination:" in line:
                     match = re.search(r'Destination: (.+)', line)
