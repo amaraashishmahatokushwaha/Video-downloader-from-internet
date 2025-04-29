@@ -87,6 +87,28 @@
       box-shadow: 0 0 8px var(--glow);
     }
     
+    .video-preview {
+      margin-top: 20px;
+      display: none;
+      max-width: 100%;
+    }
+    
+    .video-preview video {
+      width: 100%;
+      max-height: 400px;
+      border-radius: 12px;
+      border: 2px solid #e2e8f0;
+    }
+    
+    .video-preview-placeholder {
+      display: none;
+      padding: 15px;
+      background: #f8f9fa;
+      border-radius: 12px;
+      text-align: center;
+      color: var(--secondary);
+    }
+    
     .btn {
       width: 100%;
       padding: 14px;
@@ -427,10 +449,10 @@
         <div class="faq-answer">
           <ol>
             <li>Copy the URL of the tweet containing the video or GIF</li>
-            <li>Paste the URL in the input field</li>
+            <li>Paste the URL in the input field to preview the video</li>
             <li>Choose your format (Video HD, Video SD, or GIF)</li>
             <li>Click "Start Download"</li>
-            <li>Your file will be saved in the Downloads folder</li>
+            <li>Your file will be saved in your Downloads folder</li>
           </ol>
         </div>
       </div>
@@ -463,6 +485,7 @@
         </div>
         <div class="faq-answer">
           <ul>
+            <li><strong>Empty file:</strong> Retry the download if the file is empty due to network issues.</li>
             <li><strong>Rate limiting:</strong> Wait 15 minutes if Twitter limits requests.</li>
             <li><strong>Protected tweets:</strong> Private accounts cannot be downloaded.</li>
             <li><strong>No media found:</strong> Ensure the tweet contains a video or GIF.</li>
@@ -474,6 +497,7 @@
 
   <script>
     const form = document.getElementById('downloadForm');
+    const urlInput = document.getElementById('url');
     const output = document.getElementById('output');
     const stopBtn = document.getElementById('stopBtn');
     const startBtn = document.getElementById('startBtn');
@@ -481,295 +505,206 @@
     const progressValue = document.getElementById('progressValue');
     const progressText = document.getElementById('progressText');
     const statusIndicator = document.getElementById('statusIndicator');
-    
-    let downloadProcess;
-    
+    const videoPreview = document.getElementById('videoPreview');
+    const previewVideo = document.getElementById('previewVideo');
+    const previewSource = document.getElementById('previewSource');
+    const previewPlaceholder = document.getElementById('previewPlaceholder');
+
+    let abortController = null;
+
     const radius = 44;
-    const circumference = 2 * Math.Pi * radius;
+    const circumference = 2 * Math.PI * radius;
     progressValue.style.strokeDasharray = `${circumference} ${circumference}`;
     progressValue.style.strokeDashoffset = circumference;
-    
+
     function updateProgress(percent) {
       const offset = circumference - (percent / 100 * circumference);
       progressValue.style.strokeDashoffset = offset;
       progressText.textContent = `${Math.round(percent)}%`;
     }
-    
+
     function updateStatus(status, isError = false) {
       statusIndicator.textContent = status;
       statusIndicator.style.color = isError ? 'var(--danger)' : 'var(--success)';
     }
-    
+
     function buildDownloadOptions() {
-      const url = document.getElementById('url').value;
-      const formatRadios = document.getElementsByName('format');
-      let format = 'video-hd';
-      
-      for (const radio of formatRadios) {
-        if (radio.checked) {
-          format = radio.value;
-          break;
-        }
-      }
-      
+      const url = urlInput.value.trim();
+      const format = document.querySelector('input[name="format"]:checked').value;
       return {
         url,
         platform: 'twitter',
         format
       };
     }
-    
+
+    urlInput.addEventListener('input', () => {
+      const url = urlInput.value.trim();
+      if (isValidTwitterUrl(url)) {
+        videoPreview.style.display = 'block';
+        previewVideo.style.display = 'none';
+        previewPlaceholder.style.display = 'block';
+        output.textContent = `🔍 Valid Twitter URL detected. Preview unavailable without backend support.\n`;
+      } else {
+        videoPreview.style.display = 'none';
+        if (url) {
+          output.textContent = `⚠️ Invalid Twitter URL. Please enter a valid tweet URL (e.g., https://x.com/username/status/123456789).\n`;
+        } else {
+          output.textContent = `⏳ Awaiting URL...\n`;
+        }
+      }
+    });
+
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
 
-      const url = document.getElementById('url').value;
-
-      if (!url) {
-        document.getElementById('url').classList.add('shake');
-        setTimeout(() => {
-          document.getElementById('url').classList.remove('shake');
-        }, 500);
+      if (abortController) {
+        alert('A download is already in progress. Please stop it before starting a new one.');
         return;
       }
 
-      const downloadOptions = buildDownloadOptions();
-
-      output.textContent = "⏳ Starting download...";
-      updateStatus("Initializing");
-      progressContainer.classList.add('active');
-      updateProgress(0);
-
-      startBtn.disabled = true;
-      stopBtn.disabled = false;
-
-      try {
-        downloadProcess = await fetch('/twitter', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(downloadOptions),
-        });
-
-        if (!downloadProcess.ok) {
-          throw new Error(`Server error: ${downloadProcess.status}`);
-        }
-
-        const reader = downloadProcess.body.getReader();
-        const decoder = new TextDecoder();
-
-        output.textContent = "";
-        let progress = 0;
-        let downloadStarted = false;
-        let filePath = null;
-
-        while (true) {
-          const { value, done } = await reader.read();
-          if (done) break;
-
-          const chunk = decoder.decode(value, { stream: true });
-
-          output.textContent += chunk;
-          output.scrollTop = output.scrollHeight;
-
-          // Extract progress
-          const progressMatch = chunk.match(/Progress: (\d+)%/);
-          if (progressMatch) {
-            progress = parseInt(progressMatch[1]);
-            updateProgress(progress);
-
-            if (!downloadStarted && progress > 0) {
-              downloadStarted = true;
-              updateStatus("Downloading");
-            }
-          }
-
-          // Extract file path
-          const filePathMatch = chunk.match(/File saved to: (.+)/);
-          if (filePathMatch) {
-            filePath = filePathMatch[1].trim();
-          }
-
-          if (chunk.includes("Download completed")) {
-            updateStatus("Completed");
-            updateProgress(100);
-          }
-
-          if (chunk.includes("Error:")) {
-            updateStatus("Failed", true);
-          }
-        }
-
-        startBtn.disabled = false;
-        stopBtn.disabled = true;
-
-        if (output.textContent.includes("Download completed") && filePath) {
-          const successMsg = document.createElement('div');
-          successMsg.innerHTML = `
-            <i class="fas fa-check-circle success-icon"></i> Download completed successfully!
-            <br><a href="/file/twitter/${encodeURIComponent(filePath)}" download>Click here to download manually</a>
-          `;
-          successMsg.style.textAlign = 'center';
-          successMsg.style.padding = '15px';
-          output.appendChild(successMsg);
-
-          // Fetch the file and trigger download
-          try {
-            const response = await fetch(`/file/twitter/${encodeURIComponent(filePath)}`);
-            if (!response.ok) {
-              throw new Error('Failed to fetch the downloaded file');
-            }
-
-            const blob = await response.blob();
-            const fileName = filePath.split('/').pop(); // Extract filename from path
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.style.display = 'none';
-            a.href = url;
-            a.download = fileName;
-            document.body.appendChild(a);
-            a.click();
-            window.URL.revokeObjectURL(url);
-            document.body.removeChild(a);
-
-            output.textContent += `\n📥 File downloaded to your local Downloads folder as "${fileName}"`;
-          } catch (err) {
-            output.textContent += `\n❌ Error fetching file: ${err.message}`;
-            updateStatus("Error", true);
-          }
-        } else if (!filePath) {
-          output.textContent += `\n❌ Error: File path not received from server`;
-          updateStatus("Error", true);
-        }
-
-      } catch (error) {
-        output.textContent += `\n❌ Error: ${error.message}`;
-        updateStatus("Error", true);
-        startBtn.disabled = false;
-        stopBtn.disabled = true;
+      const url = urlInput.value.trim();
+      if (!url || !isValidTwitterUrl(url)) {
+        urlInput.classList.add('shake');
+        setTimeout(() => urlInput.classList.remove('shake'), 500);
+        return;
       }
-    });
-    
-    stopBtn.addEventListener('click', async () => {
-      if (downloadProcess) {
+
+      const options = buildDownloadOptions();
+      abortController = new AbortController();
+      progressContainer.classList.add('active');
+      stopBtn.disabled = false;
+      startBtn.disabled = true;
+      updateStatus('Downloading', false);
+      output.textContent = '⏳ Starting download process...\n';
+
+      let attempts = 0;
+      const maxAttempts = 2;
+
+      async function attemptDownload() {
         try {
-          await fetch('/download/abort', {
+          const response = await fetch('/twitter', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id: 'current' })
+            body: JSON.stringify(options),
+            signal: abortController.signal
           });
-          
-          output.textContent += "\n🛑 Download stopped by user.";
-          updateStatus("Stopped");
-          
-          startBtn.disabled = false;
-          stopBtn.disabled = true;
-          progressContainer.classList.remove('active');
-          
+
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+
+          const reader = response.body.getReader();
+          const decoder = new TextDecoder();
+          let progress = 0;
+          let filePath = null;
+          let completed = false;
+
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            const text = decoder.decode(value, { stream: true });
+            output.textContent += text;
+            output.scrollTop = output.scrollHeight;
+
+            const progressMatch = text.match(/Progress: (\d+)%/);
+            if (progressMatch && !completed) {
+              progress = parseInt(progressMatch[1]);
+              updateProgress(progress);
+            }
+
+            const filePathMatch = text.match(/File saved to: (.+)/);
+            if (filePathMatch) {
+              filePath = filePathMatch[1].trim();
+            }
+
+            if (text.includes('Download completed successfully') && filePath) {
+              completed = true;
+              updateStatus('Completed', false);
+              updateProgress(100);
+
+              try {
+                // Correctly construct the fetch URL by removing the base directory prefix
+                const relativePath = filePath.split('/twitter/')[1]; // Extract the part after '/twitter/'
+                const fetchUrl = `/file/twitter/${encodeURIComponent(relativePath)}`;
+                output.textContent += `\n🔗 Fetching file from: ${fetchUrl}\n`;
+                const fileResponse = await fetch(fetchUrl);
+                if (!fileResponse.ok) {
+                  throw new Error(`Failed to fetch the downloaded file: ${fileResponse.status}`);
+                }
+
+                const blob = await fileResponse.blob();
+                const fileName = relativePath;
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = fileName;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+
+                output.textContent += `\n📄 Downloaded: ${fileName}\n`;
+              } catch (err) {
+                output.textContent += `\n❌ Error downloading file: ${err.message}\n`;
+                updateStatus('Error', true);
+              }
+            } else if (text.includes('ERROR') || text.includes('Download failed')) {
+              throw new Error('Download failed');
+            }
+          }
+
+          if (!completed && attempts < maxAttempts - 1) {
+            attempts++;
+            output.textContent += `\n⚠️ Retry attempt ${attempts + 1} due to incomplete download...\n`;
+            await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds before retry
+            return attemptDownload();
+          } else if (!completed) {
+            throw new Error('Download did not complete after maximum retries');
+          }
         } catch (error) {
-          output.textContent += `\n❌ Error stopping download: ${error.message}`;
+          if (error.name === 'AbortError') {
+            output.textContent += '\n🛑 Download stopped by user.\n';
+            updateStatus('Stopped', true);
+          } else {
+            output.textContent += `\n❌ Error: ${error.message}\n`;
+            updateStatus('Error', true);
+          }
+        } finally {
+          abortController = null;
+          progressContainer.classList.remove('active');
+          stopBtn.disabled = true;
+          startBtn.disabled = false;
+        }
+      }
+
+      await attemptDownload();
+    });
+
+    stopBtn.addEventListener('click', () => {
+      if (abortController) {
+        abortController.abort();
+        try {
+          fetch('/stop', { method: 'POST' });
+        } catch (error) {
+          output.textContent += `\n❌ Error stopping download: ${error.message}\n`;
         }
       }
     });
-    
+
     function isValidTwitterUrl(url) {
       const twitterUrlRegex = /^(https?:\/\/)?(www\.)?(twitter|x)\.com\/[a-zA-Z0-9_]+\/status\/\d+/;
       return twitterUrlRegex.test(url);
     }
-    
-    const urlInput = document.getElementById('url');
-    
-    urlInput.addEventListener('input', () => {
-      const url = urlInput.value.trim();
-      urlInput.style.borderColor = url && !isValidTwitterUrl(url) ? '#f6c23e' : '#e2e8f0';
-    });
-    
+
     const faqItems = document.querySelectorAll('.faq-item');
-    
     faqItems.forEach(item => {
       const question = item.querySelector('.faq-question');
       question.addEventListener('click', () => {
         item.classList.toggle('active');
       });
-    });
-    
-    function simulateDownload() {
-      output.textContent = "⏳ Starting download process...\n";
-      updateStatus("Initializing");
-      progressContainer.classList.add('active');
-      
-      let progress = 0;
-      let steps = [
-        "🔍 Analyzing Twitter URL...",
-        "✅ URL validation successful",
-        "🔄 Connecting to Twitter API...",
-        "✅ Connection established",
-        "📡 Fetching media metadata...",
-        "✅ Found video content",
-        "📊 Analyzing available formats...",
-        "🎬 Selected highest quality",
-        "⬜ Starting download...",
-        "Progress: 10%",
-        "Progress: 25%",
-        "Progress: 42%",
-        "Progress: 56%",
-        "Progress: 73%",
-        "Progress: 89%",
-        "Progress: 98%",
-        "✅ Download completed",
-        "💾 Saving to disk...",
-        "📁 File saved to: twitter/tweet_1234567890.mp4",
-        "✨ Download completed successfully!"
-      ];
-      
-      let i = 0;
-      let interval = setInterval(() => {
-        if (i < steps.length) {
-          output.textContent += "\n" + steps[i];
-          output.scrollTop = output.scrollHeight;
-          
-          const progressMatch = steps[i].match(/Progress: (\d+)%/);
-          if (progressMatch) {
-            progress = parseInt(progressMatch[1]);
-            updateProgress(progress);
-            updateStatus("Downloading");
-          }
-          
-          if (steps[i].includes("Download completed")) {
-            updateStatus("Completed");
-            updateProgress(100);
-            
-            const successMsg = document.createElement('div');
-            successMsg.innerHTML = `
-              <i class="fas fa-check-circle success-icon"></i> Download completed successfully!
-              <br><a href="#" onclick="alert('Demo mode: Manual download not available')">Click here to download manually</a>
-            `;
-            successMsg.style.textAlign = 'center';
-            successMsg.style.padding = '15px';
-            setTimeout(() => {
-              output.appendChild(successMsg);
-            }, 500);
-            
-            startBtn.disabled = false;
-            stopBtn.disabled = true;
-          }
-          
-          i++;
-        } else {
-          clearInterval(interval);
-        }
-      }, 500);
-      
-      return interval;
-    }
-    
-    document.addEventListener('DOMContentLoaded', () => {
-      if (window.location.href.includes('demo') || window.location.href.includes('preview')) {
-        document.getElementById('startBtn').addEventListener('click', (e) => {
-          e.preventDefault();
-          startBtn.disabled = true;
-          stopBtn.disabled = false;
-          simulateDownload();
-        });
-      }
     });
   </script>
 </body>

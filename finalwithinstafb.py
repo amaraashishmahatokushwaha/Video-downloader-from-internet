@@ -8,6 +8,7 @@ import glob
 import logging
 import json
 import shutil
+import time
 
 app = Flask(__name__)
 
@@ -261,21 +262,36 @@ def download():
                         yield f"Progress: {int(percentage)}%\n"
                 if "Sign in to confirm" in line:
                     yield "❌ Error: Authentication required. Please log in to YouTube in Chrome and ensure cookies are accessible.\n"
+                # Capture initial destination (fragment files)
                 if "Destination:" in line:
                     match = re.search(r'Destination: (.+)', line)
                     if match:
                         output_file = match.group(1).strip()
+                        logger.debug(f"Detected fragment destination: {output_file}")
+                # Capture final merged file after merging
+                if "[Merger] Merging formats into" in line:
+                    match = re.search(r'Merging formats into "(.+)"', line)
+                    if match:
+                        output_file = match.group(1).strip()
+                        logger.debug(f"Detected merged file destination: {output_file}")
                 yield line
 
             current_process.stdout.close()
             return_code = current_process.wait()
             if return_code == 0:
-                if output_file and os.path.exists(output_file):
-                    relative_path = os.path.relpath(output_file, DOWNLOAD_FOLDER)
-                    yield f"✨ Download completed successfully!\n"
-                    yield f"📁 File saved to: {relative_path}\n"
+                if output_file:
+                    # Retry up to 3 times with 1-second delay to ensure file is ready
+                    for _ in range(3):
+                        if os.path.exists(output_file):
+                            relative_path = os.path.relpath(output_file, DOWNLOAD_FOLDER)
+                            yield f"✨ Download completed successfully!\n"
+                            yield f"📁 File saved to: {relative_path}\n"
+                            break
+                        time.sleep(1)
+                    else:
+                        yield "❌ Error: Output file not found after merge\n"
                 else:
-                    yield "❌ Error: Output file not found\n"
+                    yield "❌ Error: No output file path detected\n"
             else:
                 yield f"❌ Download failed with return code {return_code}. Please check the error messages above.\n"
         except Exception as e:

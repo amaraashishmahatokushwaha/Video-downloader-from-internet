@@ -46,6 +46,7 @@
       position: relative;
       overflow: hidden;
       border: 1px solid rgba(255, 255, 255, 0.1);
+      min-height: 600px; /* Added to prevent layout shifts */
     }
     
     .container::before {
@@ -209,11 +210,14 @@
       width: 140px;
       height: 140px;
       margin: 25px auto;
-      display: none;
+      visibility: hidden; /* Changed from display: none to prevent layout shifts */
+      opacity: 0;
+      transition: opacity 0.3s ease;
     }
     
     .progress-container.active {
-      display: block;
+      visibility: visible;
+      opacity: 1;
     }
     
     .progress-ring {
@@ -510,42 +514,7 @@
       opacity: 1;
     }
     
-    .cookies-upload {
-      margin-bottom: 25px;
-      padding: 20px;
-      border: 2px dashed #e2e8f0;
-      border-radius: 12px;
-      text-align: center;
-      background: #f7fafc;
-    }
-    
-    .cookies-upload.error {
-      border-color: var(--danger);
-      background: rgba(229, 62, 62, 0.05);
-    }
-    
-    .cookies-upload.success {
-      border-color: var(--success);
-      background: rgba(56, 161, 105, 0.05);
-    }
-    
-    .cookies-upload input[type="file"] {
-      display: none;
-    }
-    
-    .cookies-upload label {
-      cursor: pointer;
-      color: var(--primary);
-      font-weight: 600;
-    }
-    
-    .cookies-upload p {
-      margin-top: 10px;
-      font-size: 0.9rem;
-      color: #4a5568;
-    }
-    
-    @keyframes pulse scalp {
+    @keyframes pulse {
       0% { transform: scale(1); }
       50% { transform: scale(1.25); }
       100% { transform: scale(1); }
@@ -825,6 +794,9 @@
         </div>
       </div>
       
+      <!-- Placeholder moved below format options to prevent gap -->
+      <div class="progress-placeholder" style="height: 190px; margin: 0 auto;"></div>
+      
       <button type="submit" id="startBtn" class="btn btn-primary">
         <i class="fas fa-download"></i> Start Download
       </button>
@@ -877,11 +849,10 @@
       
       <div class="faq-item">
         <div class="faq-question">
-          How do I download a single YouTube video? <span class="osa-toggle"><i class="fas fa-chevron-down"></i></span>
+          How do I download a single YouTube video? <span class="faq-toggle"><i class="fas fa-chevron-down"></i></span>
         </div>
         <div class="faq-answer">
           <ol>
-            <li>Upload a valid YouTube cookies file (required for age-restricted or private videos)</li>
             <li>Copy the URL of the YouTube video you want to download</li>
             <li>Make sure the "Single Video" tab is selected</li>
             <li>Paste the URL in the input field</li>
@@ -891,6 +862,7 @@
             <li>Wait for the download to complete</li>
             <li>Your file will be saved in the "downloads" folder</li>
           </ol>
+          <p><strong>Note:</strong> This application can only download public videos that do not require authentication. If the video is age-restricted or private, the download may fail.</p>
         </div>
       </div>
       
@@ -900,7 +872,6 @@
         </div>
         <div class="faq-answer">
           <ol>
-            <li>Upload a valid YouTube cookies file (required for age-restricted or private videos)</li>
             <li>Copy the URL of the YouTube playlist</li>
             <li>Click on the "Playlist" tab</li>
             <li>Paste the URL in the input field</li>
@@ -911,23 +882,21 @@
             <li>Click "Start Download"</li>
             <li>Your files will be saved in the "downloads" folder</li>
           </ol>
-          <p><strong>Note:</strong> Downloading large playlists may take a long time depending on your internet connection.</p>
+          <p><strong>Note:</strong> Downloading large playlists may take a long time depending on your internet connection. This application can only download public playlists that do not require authentication.</p>
         </div>
       </div>
       
       <div class="faq-item">
         <div class="faq-question">
-          How do I get a YouTube cookies file? <span class="faq-toggle"><i class="fas fa-chevron-down"></i></span>
+          Why can’t I download some videos? <span class="faq-toggle"><i class="fas fa-chevron-down"></i></span>
         </div>
         <div class="faq-answer">
-          <p>To download age-restricted or private videos, you need to provide a cookies file from your YouTube account:</p>
-          <ol>
-            <li>Use a browser extension like "Get cookies.txt" for Chrome or Firefox</li>
-            <li>Log in to YouTube in your browser</li>
-            <li>Export the cookies as a .txt file using the extension</li>
-            <li>Upload the cookies file using the "Upload YouTube Cookies" section above</li>
-          </ol>
-          <p>More details: <a href="https://github.com/yt-dlp/yt-dlp/wiki/Extractors#exporting-youtube-cookies" target="_blank">Exporting YouTube Cookies</a></p>
+          <p>This application can only download public YouTube videos that do not require authentication. Videos that are age-restricted, private, or otherwise restricted cannot be downloaded due to YouTube’s policies.</p>
+          <p><strong>What you can do:</strong></p>
+          <ul>
+            <li>Try downloading a different video that is publicly available.</li>
+            <li>If you need to download restricted videos, you can run this application locally on your computer where you are logged into YouTube in your browser. This may allow the application to use your browser’s authentication (requires backend support).</li>
+          </ul>
         </div>
       </div>
       
@@ -962,7 +931,7 @@
         </div>
         <div class="faq-answer">
           <ul>
-            <li><strong>Download fails with authentication error:</strong> Ensure you have uploaded a valid cookies file. Follow the guide to export cookies correctly.</li>
+            <li><strong>Download fails with authentication error:</strong> The video may be age-restricted or private. This application can only download public videos. Try a different video or run the application locally where you are logged into YouTube.</li>
             <li><strong>Download fails immediately:</strong> Make sure the URL is correct and the video is available in your country.</li>
             <li><strong>Download starts but then stops:</strong> This could be due to network issues or YouTube restrictions. Try again or choose a lower quality.</li>
             <li><strong>Playlist download is incomplete:</strong> For very large playlists, some videos might fail to download due to restrictions. Check the logs for details.</li>
@@ -1016,7 +985,6 @@
     const progressValue = document.getElementById('progressValue');
     const progressText = document.getElementById('progressText');
     const statusIndicator = document.getElementById('statusIndicator');
-    const cookiesUpload = document.getElementById('cookiesUpload');
     
     let downloadProcess;
     
@@ -1170,8 +1138,8 @@
               updateStatus("Converting");
             }
             
-            if (line.includes("ERROR:") || line.includes("Please upload a valid cookies file")) {
-              updateStatus("Failed", true);
+            if (line.includes("ERROR:") || line.includes("Sign in to confirm your age") || line.includes("Private video") || line.includes("Login required")) {
+              throw new Error("This video appears to be age-restricted, private, or requires login. This application can only download public videos. Please try a different video or refer to the FAQ for more options.");
             }
           }
         }
