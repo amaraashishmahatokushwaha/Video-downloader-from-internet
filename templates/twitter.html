@@ -489,6 +489,8 @@
             <li><strong>Rate limiting:</strong> Wait 15 minutes if Twitter limits requests.</li>
             <li><strong>Protected tweets:</strong> Private accounts cannot be downloaded.</li>
             <li><strong>No media found:</strong> Ensure the tweet contains a video or GIF.</li>
+            <li><strong>File already exists:</strong> The file may already exist in your Downloads folder. The downloader will overwrite it to ensure a fresh download.</li>
+            <li><strong>File not found (404):</strong> If the file cannot be fetched, it may already be in your Downloads folder at /Users/amarnathmahato/Downloads/twitter/.</li>
           </ul>
         </div>
       </div>
@@ -528,13 +530,21 @@
       statusIndicator.style.color = isError ? 'var(--danger)' : 'var(--success)';
     }
 
+    function sanitizeFileName(fileName) {
+      return fileName
+        .replace(/[^a-zA-Z0-9.-]/g, '_') // Replace non-alphanumeric characters with underscores
+        .replace(/_+/g, '_') // Replace multiple underscores with a single one
+        .slice(0, 200); // Limit length to avoid filesystem issues
+    }
+
     function buildDownloadOptions() {
       const url = urlInput.value.trim();
       const format = document.querySelector('input[name="format"]:checked').value;
       return {
         url,
         platform: 'twitter',
-        format
+        format,
+        overwrite: true // Force overwrite by default
       };
     }
 
@@ -625,17 +635,24 @@
               updateProgress(100);
 
               try {
-                // Correctly construct the fetch URL by removing the base directory prefix
-                const relativePath = filePath.split('/twitter/')[1]; // Extract the part after '/twitter/'
-                const fetchUrl = `/file/twitter/${encodeURIComponent(relativePath)}`;
+                // Extract the file name from the full path
+                const pathParts = filePath.split('/');
+                let fileName = pathParts[pathParts.length - 1]; // Get the last part (file name)
+                
+                // Sanitize the file name to remove special characters
+                fileName = sanitizeFileName(fileName);
+                
+                // Properly encode the file name for the URL
+                const encodedFileName = encodeURIComponent(fileName);
+                const fetchUrl = `/file/twitter/${encodedFileName}`;
                 output.textContent += `\n🔗 Fetching file from: ${fetchUrl}\n`;
+
                 const fileResponse = await fetch(fetchUrl);
                 if (!fileResponse.ok) {
                   throw new Error(`Failed to fetch the downloaded file: ${fileResponse.status}`);
                 }
 
                 const blob = await fileResponse.blob();
-                const fileName = relativePath;
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.style.display = 'none';
@@ -649,6 +666,7 @@
                 output.textContent += `\n📄 Downloaded: ${fileName}\n`;
               } catch (err) {
                 output.textContent += `\n❌ Error downloading file: ${err.message}\n`;
+                output.textContent += `\nℹ️ The file may already be in your Downloads folder: ${filePath}\n`;
                 updateStatus('Error', true);
               }
             } else if (text.includes('ERROR') || text.includes('Download failed')) {
