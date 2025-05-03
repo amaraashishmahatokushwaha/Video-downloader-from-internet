@@ -111,11 +111,29 @@
             transform: translateY(1px);
         }
 
+        .try-again-btn {
+            margin-top: 10px;
+            padding: 10px 20px;
+            background: #666;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .try-again-btn:hover {
+            background: #888;
+            transform: translateY(-2px);
+        }
+
         .video-container {
             display: none;
             margin-top: 40px;
             border-radius: 20px;
             overflow: hidden;
+            box Ascendant;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
             animation: fadeIn 0.5s ease;
         }
@@ -334,6 +352,7 @@
             <input type="text" class="url-input" id="videoUrl" placeholder="Paste YouTube URL here...">
             <p class="error-message" id="errorMessage">Please enter a valid YouTube URL</p>
             <button class="search-btn" id="searchBtn">Find Video</button>
+            <button class="try-again-btn" id="tryAgainBtn" style="display: none;">Try Another Video</button>
         </div>
         
         <div class="loader" id="loader">
@@ -453,6 +472,7 @@
         // YouTube URL validation and processing
         const videoUrlInput = document.getElementById('videoUrl');
         const searchBtn = document.getElementById('searchBtn');
+        const tryAgainBtn = document.getElementById('tryAgainBtn');
         const errorMessage = document.getElementById('errorMessage');
         const loader = document.getElementById('loader');
         const videoContainer = document.getElementById('videoContainer');
@@ -511,6 +531,7 @@
             downloadStatus.classList.add('show');
             statusMessage.textContent = 'Starting download...\n';
             downloadLink.style.display = 'none';
+            tryAgainBtn.style.display = 'none';
             
             try {
                 const response = await fetch('/download', {
@@ -560,6 +581,10 @@
                         }
                         else if (line.includes('❌ Error')) {
                             lastError = line.replace('❌ Error: ', '').trim();
+                            if (line.includes('authentication') || line.includes('Sign in to confirm')) {
+                                statusMessage.textContent += 'This video is restricted. Please try a different video.\n';
+                                tryAgainBtn.style.display = 'inline';
+                            }
                         }
                         else if (line.includes('✨ Download completed successfully')) {
                             statusMessage.textContent += 'Processing complete, checking file path...\n';
@@ -575,7 +600,7 @@
                     } else {
                         lastDest = lastDest.replace(/\.(webm|m4a)$/, '.mp4');
                     }
-                    outputFile = lastDest.replace(/^\/Users\/amarnathmahato\/Downloads\//, '');
+                    outputFile = lastDest.replace(/^\/opt\/render\/Downloads\//, '').replace(/^.*\/Downloads\//, '');
                     statusMessage.textContent += `Inferred file path: ${outputFile}\n`;
                     downloadLink.href = `/file/youtube/${outputFile}`;
                     downloadLink.style.display = 'inline';
@@ -592,14 +617,17 @@
                 }
                 
                 // Handle errors
-                if (!downloadLink.style.display) {
+                if (!downloadLink.style.display && lastError) {
                     const recentOutput = streamBuffer.slice(-10).join('\n');
-                    throw new Error(lastError || `No output file path detected. Possible destinations: ${possibleDestinations.join(', ')}\nRecent output:\n${recentOutput}`);
+                    throw new Error(`${lastError}\nPossible destinations: ${possibleDestinations.join(', ')}\nRecent output:\n${recentOutput}`);
                 }
             } catch (error) {
                 console.error('Download error:', error);
                 statusMessage.textContent += `Error: ${error.message}\n`;
                 downloadLink.style.display = 'none';
+                if (error.message.includes('authentication') || error.message.includes('Sign in to confirm')) {
+                    tryAgainBtn.style.display = 'inline';
+                }
             }
         }
         
@@ -616,6 +644,7 @@
             loader.style.display = 'block';
             videoContainer.style.display = 'none';
             downloadStatus.classList.remove('show');
+            tryAgainBtn.style.display = 'none';
             
             const videoId = extractVideoId(url);
             
@@ -635,6 +664,16 @@
                 errorMessage.style.display = 'block';
                 loader.style.display = 'none';
             }
+        });
+        
+        // Handle try again button click
+        tryAgainBtn.addEventListener('click', () => {
+            videoUrlInput.value = '';
+            videoContainer.style.display = 'none';
+            downloadStatus.classList.remove('show');
+            tryAgainBtn.style.display = 'none';
+            errorMessage.style.display = 'none';
+            videoUrlInput.focus();
         });
         
         // Handle download button clicks

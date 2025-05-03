@@ -82,7 +82,7 @@ def list_files(platform):
     if os.path.exists(platform_folder):
         for root, _, filenames in os.walk(platform_folder):
             for filename in filenames:
-                if filename.endswith(('.mp4', '.jpg', '.jpeg', '.png', '.json', '.gif')):
+                if filename.endswith(('.mp4', '.jpg', '.jpeg', '.png', '.json', '.gif', '.mp3')):
                     relative_path = os.path.relpath(os.path.join(root, filename), platform_folder)
                     files.append(relative_path)
     return jsonify(files)
@@ -122,6 +122,11 @@ def generate_command(data):
     platform = data.get("platform", "youtube")
 
     cmd = ["yt-dlp", "--no-warnings", "--progress", "--ignore-errors"]
+
+    # Add cookies for authentication (optional, enable locally if needed)
+    # Uncomment the following line for local testing with Chrome cookies:
+    # cmd.extend(["--cookies-from-browser", "chrome"])
+    # Note: Not enabled by default for Render compatibility
 
     # Add User-Agent if provided
     if data.get("userAgent"):
@@ -255,40 +260,43 @@ def download():
                     if match:
                         percentage = float(match.group(1))
                         yield f"Progress: {int(percentage)}%\n"
-                if "Sign in to confirm" in line:
-                    yield "❌ Error: This video requires authentication (e.g., age-restricted or private). Please try a different video or refer to the FAQ.\n"
-                # Capture initial destination (fragment files)
+                if "Sign in to confirm" in line or "requires authentication" in line:
+                    yield "❌ Error: This video requires authentication (e.g., age-restricted or private). Please try a different video or contact support for assistance.\n"
+                # Capture any destination (fragment or final)
                 if "Destination:" in line:
                     match = re.search(r'Destination: (.+)', line)
                     if match:
                         output_file = match.group(1).strip()
-                        logger.debug(f"Detected fragment destination: {output_file}")
-                # Capture final merged file after merging
+                        logger.debug(f"Detected destination: {output_file}")
+                # Update output_file for merged file
                 if "[Merger] Merging formats into" in line:
                     match = re.search(r'Merging formats into "(.+)"', line)
                     if match:
                         output_file = match.group(1).strip()
-                        logger.debug(f"Detected merged file destination: {output_file}")
+                        logger.debug(f"Detected merged file: {output_file}")
+                # Capture ffmpeg output for MP3 or final formats
+                if "[ffmpeg] Destination:" in line:
+                    match = re.search(r'\[ffmpeg\] Destination: (.+)', line)
+                    if match:
+                        output_file = match.group(1).strip()
+                        logger.debug(f"Detected ffmpeg destination: {output_file}")
                 yield line
 
             current_process.stdout.close()
             return_code = current_process.wait()
-            if return_code == 0:
-                if output_file:
-                    # Retry up to 3 times with 1-second delay to ensure file is ready
-                    for _ in range(3):
-                        if os.path.exists(output_file):
-                            relative_path = os.path.relpath(output_file, DOWNLOAD_FOLDER)
-                            yield f"✨ Download completed successfully!\n"
-                            yield f"📁 File saved to: {relative_path}\n"
-                            break
-                        time.sleep(1)
-                    else:
-                        yield "❌ Error: Output file not found after merge\n"
+            if return_code == 0 and output_file:
+                # Retry up to 5 times with 1-second delay
+                for _ in range(5):
+                    if os.path.exists(output_file):
+                        relative_path = os.path.relpath(output_file, DOWNLOAD_FOLDER)
+                        yield f"✨ Download completed successfully!\n"
+                        yield f"📁 File saved to: {relative_path}\n"
+                        break
+                    time.sleep(1)
                 else:
-                    yield "❌ Error: No output file path detected\n"
+                    yield "❌ Error: Output file not found after processing\n"
             else:
-                yield f"❌ Download failed with return code {return_code}. Please check the error messages above.\n"
+                yield f"❌ Download failed with return code {return_code or 'unknown'}. Please check the error messages above.\n"
         except Exception as e:
             logger.error(f"Error running download command: {str(e)}")
             yield f"❌ Error: {str(e)}\n"
